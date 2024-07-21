@@ -1,4 +1,4 @@
-use crate::sand::Sand;
+use crate::{block::Block, sand::Sand};
 use anyhow::Result;
 use crossterm::{
     cursor::{self},
@@ -35,7 +35,7 @@ pub fn run(mut sand: Sand) -> Result<()> {
                     match m.kind {
                         event::MouseEventKind::Down(event::MouseButton::Left)
                         | event::MouseEventKind::Drag(event::MouseButton::Left) => {
-                            sand.set_cell(column, row);
+                            sand.set_cell(column, row, Block::new());
                         }
                         event::MouseEventKind::Down(event::MouseButton::Right)
                         | event::MouseEventKind::Drag(event::MouseButton::Right) => {
@@ -54,14 +54,20 @@ pub fn run(mut sand: Sand) -> Result<()> {
         queue!(w, terminal::Clear(terminal::ClearType::All))?;
         for (columns, column) in sand.grid.iter().enumerate() {
             for (rows, &cell) in column.iter().enumerate() {
-                if !cell {
-                    continue;
+                if let Some(block) = cell {
+                    let color = block.color.rgb();
+                    queue!(
+                        w,
+                        cursor::MoveTo(columns as u16, rows as u16),
+                        style::SetForegroundColor(style::Color::Rgb {
+                            r: color.r,
+                            g: color.g,
+                            b: color.b,
+                        }),
+                        style::Print(block.character),
+                        style::ResetColor
+                    )?;
                 }
-                queue!(
-                    w,
-                    cursor::MoveTo(columns as u16, rows as u16),
-                    style::Print(sand.block)
-                )?;
             }
         }
 
