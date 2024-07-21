@@ -9,10 +9,17 @@ pub struct Block {
 impl Block {
     pub fn new() -> Block {
         let hue = rand::random::<f32>() * 360.0;
-        let color = coolor::Color::Hsl(Hsl::new(hue, 0.8, 0.5));
-        Block {
-            character: '█',
-            color,
-        }
+        let saturation = 0.8;
+        let lightness = 0.5;
+        let color = coolor::Color::Hsl(Hsl::new(hue, saturation, lightness));
+
+        let character = rand::random::<u8>() % 52;
+        let character = if character < 26 {
+            (character + b'a') as char
+        } else {
+            (character - 26 + b'A') as char
+        };
+
+        Block { character, color }
     }
 }
