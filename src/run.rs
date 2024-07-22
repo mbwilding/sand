@@ -28,6 +28,8 @@ pub fn run(mut sand: Sand) -> Result<()> {
                 Event::FocusLost => {}
                 Event::Key(k) => match k.code {
                     KeyCode::Char('q') => break,
+                    KeyCode::Char('r') => sand.reset(),
+                    KeyCode::Char('d') => sand.drain(),
                     _ => {}
                 },
                 Event::Mouse(m) => {
@@ -35,11 +37,15 @@ pub fn run(mut sand: Sand) -> Result<()> {
                     match m.kind {
                         event::MouseEventKind::Down(event::MouseButton::Left)
                         | event::MouseEventKind::Drag(event::MouseButton::Left) => {
-                            sand.set_cell(column, row, Block::new());
+                            if sand.is_cell_unset(column, row) {
+                                sand.cell_set(column, row, Block::new());
+                            }
                         }
                         event::MouseEventKind::Down(event::MouseButton::Right)
                         | event::MouseEventKind::Drag(event::MouseButton::Right) => {
-                            sand.clear_cell(column, row);
+                            if sand.is_cell_unset(column, row) {
+                                sand.clear_cell(column, row);
+                            }
                         }
                         _ => {}
                     }
@@ -77,7 +83,7 @@ pub fn run(mut sand: Sand) -> Result<()> {
             style::SetBackgroundColor(style::Color::Black),
             style::Print(" ".repeat(sand.columns.into())),
             cursor::MoveTo(0, 0),
-            style::Print("Press 'q' to quit, 'left click' to draw, 'right click' to erase."),
+            style::Print("paint: left_mouse | erase: right_mouse | drain: d | reset: r | quit: q"),
             style::ResetColor
         )?;
 
