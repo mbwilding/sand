@@ -1,4 +1,4 @@
-use crate::{block::Block, sand::Sand};
+use crate::game::Game;
 use anyhow::Result;
 use crossterm::{
     cursor::{self},
@@ -8,7 +8,7 @@ use crossterm::{
 use std::io::Write;
 use std::time::Duration;
 
-pub fn run(mut sand: Sand) -> Result<()> {
+pub fn render(mut game: Game) -> Result<()> {
     let mut w = std::io::stdout();
 
     execute!(
@@ -22,43 +22,47 @@ pub fn run(mut sand: Sand) -> Result<()> {
     loop {
         queue!(w, cursor::Hide)?;
 
-        if poll(Duration::from_millis(sand.speed))? {
+        if poll(Duration::from_millis(game.speed))? {
             match crossterm::event::read()? {
                 Event::FocusGained => {}
                 Event::FocusLost => {}
                 Event::Key(k) => match k.code {
                     KeyCode::Char('q') => break,
-                    KeyCode::Char('r') => sand.reset(),
-                    KeyCode::Char('d') => sand.drain(),
+                    KeyCode::Char('r') => game.reset(),
+                    KeyCode::Char('d') => game.drain(),
+                    KeyCode::Char('h') | KeyCode::Left => game.move_left(),
+                    KeyCode::Char('l') | KeyCode::Right => game.move_right(),
+                    KeyCode::Char('k') | KeyCode::Up => game.move_up(),
+                    KeyCode::Char('j') | KeyCode::Down => game.move_down(),
+                    KeyCode::Char(' ') => game.cell_add(),
+                    KeyCode::Delete => game.cell_remove(),
                     _ => {}
                 },
                 Event::Mouse(m) => {
                     let (column, row) = (m.column, m.row);
+                    game.selected_column = column;
+                    game.selected_row = row;
                     match m.kind {
                         event::MouseEventKind::Down(event::MouseButton::Left)
                         | event::MouseEventKind::Drag(event::MouseButton::Left) => {
-                            if sand.is_cell_unset(column, row) {
-                                sand.cell_set(column, row, Block::new());
-                            }
+                            game.cell_add();
                         }
                         event::MouseEventKind::Down(event::MouseButton::Right)
                         | event::MouseEventKind::Drag(event::MouseButton::Right) => {
-                            if sand.is_cell_unset(column, row) {
-                                sand.clear_cell(column, row);
-                            }
+                            game.cell_remove();
                         }
                         _ => {}
                     }
                 }
                 Event::Paste(_) => {}
-                Event::Resize(columns, rows) => sand.resize_grid(columns, rows),
+                Event::Resize(columns, rows) => game.resize_grid(columns, rows),
             };
         }
 
-        sand.update();
+        game.update();
 
         queue!(w, terminal::Clear(terminal::ClearType::All))?;
-        for (columns, column) in sand.grid.iter().enumerate() {
+        for (columns, column) in game.grid.iter().enumerate() {
             for (rows, &cell) in column.iter().enumerate() {
                 if let Some(block) = cell {
                     let color = block.color.rgb();
@@ -70,7 +74,7 @@ pub fn run(mut sand: Sand) -> Result<()> {
                             g: color.g,
                             b: color.b,
                         }),
-                        style::Print(block.character),
+                        style::Print(block.glyph),
                         style::ResetColor
                     )?;
                 }
@@ -81,9 +85,13 @@ pub fn run(mut sand: Sand) -> Result<()> {
             w,
             cursor::MoveTo(0, 0),
             style::SetBackgroundColor(style::Color::Black),
-            style::Print(" ".repeat(sand.columns.into())),
+            style::Print(" ".repeat(game.total_columns.into())),
             cursor::MoveTo(0, 0),
-            style::Print("paint: left_mouse | erase: right_mouse | drain: d | reset: r | quit: q"),
+            style::Print("paint: left_mouse or space | erase: right_mouse or ctrl | drain: d | reset: r | quit: q"),
+            cursor::MoveTo(game.selected_column, game.selected_row),
+            style::SetBackgroundColor(style::Color::Black),
+            style::SetForegroundColor(style::Color::White),
+            style::Print("X"),
             style::ResetColor
         )?;
 

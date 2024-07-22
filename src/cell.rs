@@ -1,13 +1,13 @@
 use coolor::{Color, Hsl};
 
 #[derive(Debug, Clone, Copy)]
-pub struct Block {
-    pub character: char,
+pub struct Cell {
+    pub glyph: char,
     pub color: Color,
 }
 
-impl Block {
-    pub fn new() -> Block {
+impl Cell {
+    pub fn new() -> Cell {
         let hue = rand::random::<f32>() * 360.0;
         let saturation = 0.8;
         let lightness = 0.5;
@@ -20,6 +20,9 @@ impl Block {
             (character - 26 + b'A') as char
         };
 
-        Block { character, color }
+        Cell {
+            glyph: character,
+            color,
+        }
     }
 }

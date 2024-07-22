@@ -1,12 +1,12 @@
 use anyhow::Result;
-use sand::Sand;
+use game::Game;
 
-mod block;
-mod run;
-mod sand;
+mod cell;
+mod game;
+mod renderer;
 
 fn main() -> Result<()> {
-    let sand = Sand::new(60, 3)?;
+    let game = Game::new(60, 3)?;
 
-    run::run(sand)
+    renderer::render(game)
 }
