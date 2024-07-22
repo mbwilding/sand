@@ -127,30 +127,39 @@ impl Game {
     }
 
     pub fn effect_topple(&mut self, range: isize) {
-        use rand::seq::SliceRandom;
-        let mut rng = rand::thread_rng();
-
         for column in 0..self.total_columns as usize {
             for row in (0..self.total_rows as usize).rev() {
                 if self.grid[column][row].is_some() {
-                    let mut directions = [(-1, range), (1, range)];
-                    directions.shuffle(&mut rng);
-                    for (dc, dr) in directions.iter() {
-                        let new_col = (column as isize + dc) as usize;
-                        let new_row = (row as isize + dr) as usize;
-                        if new_col < self.total_columns as usize
-                            && new_row < self.total_rows as usize
-                            && self.grid[new_col][new_row].is_none()
-                            && (row == self.total_rows as usize - 1
-                                || self.grid[column][row + 1].is_some())
-                        {
-                            self.grid[new_col][new_row] = self.grid[column][row];
-                            self.grid[column][row] = None;
-                            break;
-                        }
+                    let direction = rand::random::<bool>();
+                    if self.check_topple_direction(column, row, range, direction) {
+                        continue;
                     }
+                    self.check_topple_direction(column, row, range, !direction);
                 }
             }
         }
+    }
+
+    fn check_topple_direction(
+        &mut self,
+        column: usize,
+        row: usize,
+        range: isize,
+        direction: bool,
+    ) -> bool {
+        let new_col = (column as isize + if direction { -1 } else { 1 }) as usize;
+        let new_row = (row as isize + range) as usize;
+        if new_col < self.total_columns as usize
+            && new_row < self.total_rows as usize
+            && self.grid[new_col][new_row].is_none()
+            && (row == self.total_rows as usize - 1 || self.grid[column][row + 1].is_some())
+        {
+            self.grid[new_col][new_row] = self.grid[column][row];
+            self.grid[column][row] = None;
+
+            return true;
+        }
+
+        false
     }
 }
