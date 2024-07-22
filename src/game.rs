@@ -15,15 +15,16 @@ pub struct Game {
 
 impl Game {
     pub fn new(fps: u64, topple: isize) -> Result<Self> {
-        let (columns, rows) = terminal::size()?;
-        let selected_column = columns / 2;
-        let selected_row = rows / 2;
-        let grid: Vec<Vec<Option<Cell>>> = vec![vec![None; rows as usize]; columns as usize];
+        let (total_columns, total_rows) = terminal::size()?;
+        let selected_column = total_columns / 2;
+        let selected_row = total_rows / 2;
+        let grid: Vec<Vec<Option<Cell>>> =
+            vec![vec![None; total_rows as usize]; total_columns as usize];
         let speed = 1000 / fps;
 
         Ok(Self {
-            total_columns: columns,
-            total_rows: rows,
+            total_columns,
+            total_rows,
             selected_column,
             selected_row,
             grid,
