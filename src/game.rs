@@ -116,11 +116,12 @@ impl Game {
     pub fn effect_gravity(&mut self) {
         for column in 0..self.total_columns as usize {
             for row in (0..self.total_rows as usize).rev() {
-                if self.grid[column][row].is_some() {
-                    if row + 1 < self.total_rows as usize && self.grid[column][row + 1].is_none() {
-                        self.grid[column][row + 1] = self.grid[column][row];
-                        self.grid[column][row] = None;
-                    }
+                if self.grid[column][row].is_some()
+                    && row + 1 < self.total_rows as usize
+                    && self.grid[column][row + 1].is_none()
+                {
+                    self.grid[column][row + 1] = self.grid[column][row];
+                    self.grid[column][row] = None;
                 }
             }
         }
