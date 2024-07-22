@@ -6,7 +6,7 @@ mod run;
 mod sand;
 
 fn main() -> Result<()> {
-    let sand = Sand::new(5)?;
+    let sand = Sand::new(60)?;
 
     run::run(sand)
 }
