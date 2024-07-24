@@ -9,10 +9,10 @@ pub fn check(game: &mut Game) -> Result<()> {
             Event::FocusGained => {}
             Event::FocusLost => {}
             Event::Key(k) => match k.code {
-                KeyCode::Char('h') | KeyCode::Left => game.move_left(),
-                KeyCode::Char('l') | KeyCode::Right => game.move_right(),
-                KeyCode::Char('k') | KeyCode::Up => game.move_up(),
-                KeyCode::Char('j') | KeyCode::Down => game.move_down(),
+                // KeyCode::Char('h') | KeyCode::Left => game.move_left(),
+                // KeyCode::Char('l') | KeyCode::Right => game.move_right(),
+                // KeyCode::Char('k') | KeyCode::Up => game.move_up(),
+                // KeyCode::Char('j') | KeyCode::Down => game.move_down(),
                 KeyCode::Char('r') => game.reset(),
                 KeyCode::Char('d') => game.drain(),
                 KeyCode::Char(' ') => game.create(),

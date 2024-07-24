@@ -43,38 +43,6 @@ impl Game {
         self.radius = size as f64;
     }
 
-    pub fn move_left(&mut self) {
-        if self.selected_column > 0 {
-            self.selected_column -= 1;
-        } else {
-            self.selected_column = self.total_columns - 1;
-        }
-    }
-
-    pub fn move_right(&mut self) {
-        if self.selected_column < self.total_columns - 1 {
-            self.selected_column += 1;
-        } else {
-            self.selected_column = 0;
-        }
-    }
-
-    pub fn move_up(&mut self) {
-        if self.selected_row > 0 {
-            self.selected_row -= 1;
-        } else {
-            self.selected_row = self.total_rows - 1;
-        }
-    }
-
-    pub fn move_down(&mut self) {
-        if self.selected_row < self.total_rows - 1 {
-            self.selected_row += 1;
-        } else {
-            self.selected_row = 0;
-        }
-    }
-
     pub fn resize_grid(&mut self, new_columns: u16, new_rows: u16) {
         let old_rows = self.total_rows as usize;
         self.grid
@@ -189,4 +157,38 @@ impl Game {
     pub fn quit(&mut self) {
         self.running = false;
     }
+
+    /*
+        pub fn move_left(&mut self) {
+            if self.selected_column > 0 {
+                self.selected_column -= 1;
+            } else {
+                self.selected_column = self.total_columns - 1;
+            }
+        }
+
+        pub fn move_right(&mut self) {
+            if self.selected_column < self.total_columns - 1 {
+                self.selected_column += 1;
+            } else {
+                self.selected_column = 0;
+            }
+        }
+
+        pub fn move_up(&mut self) {
+            if self.selected_row > 0 {
+                self.selected_row -= 1;
+            } else {
+                self.selected_row = self.total_rows - 1;
+            }
+        }
+
+        pub fn move_down(&mut self) {
+            if self.selected_row < self.total_rows - 1 {
+                self.selected_row += 1;
+            } else {
+                self.selected_row = 0;
+            }
+        }
+    */
 }

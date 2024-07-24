@@ -14,6 +14,8 @@ pub fn render(mut game: Game) -> Result<()> {
 
     terminal::enable_raw_mode()?;
 
+    let mut previous_frame = vec![vec![None; game.grid[0].len()]; game.grid.len()];
+
     loop {
         queue!(w, cursor::Hide)?;
 
@@ -23,33 +25,33 @@ pub fn render(mut game: Game) -> Result<()> {
         }
         game.update();
 
-        queue!(w, terminal::Clear(terminal::ClearType::All))?;
         for (columns, column) in game.grid.iter().enumerate() {
             for (rows, &cell) in column.iter().enumerate() {
-                if let Some(block) = cell {
-                    let color = block.color.rgb();
-                    queue!(
-                        w,
-                        cursor::MoveTo(columns as u16, rows as u16),
-                        style::SetForegroundColor(style::Color::Rgb {
-                            r: color.r,
-                            g: color.g,
-                            b: color.b,
-                        }),
-                        style::Print(block.glyph),
-                        style::ResetColor
-                    )?;
+                if previous_frame[columns][rows] != cell {
+                    if let Some(block) = cell {
+                        let color = block.color.rgb();
+                        queue!(
+                            w,
+                            cursor::MoveTo(columns as u16, rows as u16),
+                            style::SetForegroundColor(style::Color::Rgb {
+                                r: color.r,
+                                g: color.g,
+                                b: color.b,
+                            }),
+                            style::Print(block.glyph),
+                            style::ResetColor
+                        )?;
+                    } else {
+                        queue!(
+                            w,
+                            cursor::MoveTo(columns as u16, rows as u16),
+                            style::Print(" ")
+                        )?;
+                    }
+                    previous_frame[columns][rows] = cell;
                 }
             }
         }
-
-        queue!(
-            w,
-            cursor::MoveTo(game.selected_column, game.selected_row),
-            style::SetForegroundColor(style::Color::DarkGreen),
-            style::Print("X"),
-            style::ResetColor
-        )?;
 
         w.flush()?;
     }
