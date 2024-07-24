@@ -14,6 +14,7 @@ pub struct Game {
 }
 
 impl Game {
+    /// Initializes the game
     pub fn init(total_columns: u32, total_rows: u32) -> Self {
         Self {
             total_columns: total_columns as u16,
@@ -25,109 +26,7 @@ impl Game {
         }
     }
 
-    pub fn resize(&mut self, new_columns: u16, new_rows: u16) {
-        let old_rows = self.total_rows as usize;
-        self.grid
-            .resize_with(new_columns as usize, || vec![None; old_rows]);
-        for column in &mut self.grid {
-            column.resize(new_rows as usize, None);
-        }
-
-        self.total_columns = new_columns;
-        self.total_rows = new_rows;
-    }
-
-    pub fn apply(&mut self, column: u32, row: u32, state: bool) {
-        let center_x = column as f64;
-        let center_y = row as f64;
-
-        for x in (center_x as i32 - self.radius as i32)..=(center_x as i32 + self.radius as i32) {
-            for y in (center_y as i32 - self.radius as i32)..=(center_y as i32 + self.radius as i32)
-            {
-                if ((x as f64 - center_x).powi(2) + (y as f64 - center_y).powi(2)).sqrt()
-                    <= self.radius
-                    && x >= 0
-                    && y >= 0
-                    && (x as usize) < self.grid.len()
-                    && (y as usize) < self.grid[0].len()
-                {
-                    self.grid[x as usize][y as usize] = if state {
-                        Some(Cell::new(true, true, true, true))
-                    } else {
-                        None
-                    };
-                }
-            }
-        }
-    }
-
-    pub fn reset(&mut self) {
-        self.grid = vec![vec![None; self.total_rows as usize]; self.total_columns as usize];
-    }
-
-    pub fn drain(&mut self) {
-        let last_row = self.total_rows as usize - 1;
-        for column in 0..self.total_columns as usize {
-            self.grid[column][last_row] = None;
-        }
-    }
-
-    pub fn update(&mut self) {
-        self.effect_topple(self.topple);
-        self.effect_gravity();
-    }
-
-    pub fn effect_gravity(&mut self) {
-        for column in 0..self.total_columns as usize {
-            for row in (0..self.total_rows as usize).rev() {
-                if self.grid[column][row].is_some()
-                    && row + 1 < self.total_rows as usize
-                    && self.grid[column][row + 1].is_none()
-                {
-                    self.grid[column][row + 1] = self.grid[column][row];
-                    self.grid[column][row] = None;
-                }
-            }
-        }
-    }
-
-    pub fn effect_topple(&mut self, range: isize) {
-        for column in 0..self.total_columns as usize {
-            for row in (0..self.total_rows as usize).rev() {
-                if self.grid[column][row].is_some() {
-                    let direction = rand::random::<bool>();
-                    if self.check_topple_direction(column, row, range, direction) {
-                        continue;
-                    }
-                    self.check_topple_direction(column, row, range, !direction);
-                }
-            }
-        }
-    }
-
-    fn check_topple_direction(
-        &mut self,
-        column: usize,
-        row: usize,
-        range: isize,
-        direction: bool,
-    ) -> bool {
-        let new_col = (column as isize + if direction { -1 } else { 1 }) as usize;
-        let new_row = (row as isize + range) as usize;
-        if new_col < self.total_columns as usize
-            && new_row < self.total_rows as usize
-            && self.grid[new_col][new_row].is_none()
-            && (row == self.total_rows as usize - 1 || self.grid[column][row + 1].is_some())
-        {
-            self.grid[new_col][new_row] = self.grid[column][row];
-            self.grid[column][row] = None;
-
-            return true;
-        }
-
-        false
-    }
-
+    /// Handles the input
     pub fn input(&mut self, engine: &ConsoleEngine) {
         // Resets the game
         if engine.is_key_pressed(KeyCode::Char('r')) {
@@ -165,6 +64,59 @@ impl Game {
         }
     }
 
+    /// Resizes the grid
+    pub fn resize(&mut self, new_columns: u16, new_rows: u16) {
+        let old_rows = self.total_rows as usize;
+        self.grid
+            .resize_with(new_columns as usize, || vec![None; old_rows]);
+        for column in &mut self.grid {
+            column.resize(new_rows as usize, None);
+        }
+
+        self.total_columns = new_columns;
+        self.total_rows = new_rows;
+    }
+
+    /// Applies the brush to the grid
+    pub fn apply(&mut self, column: u32, row: u32, state: bool) {
+        let center_x = column as f64;
+        let center_y = row as f64;
+
+        for x in (center_x as i32 - self.radius as i32)..=(center_x as i32 + self.radius as i32) {
+            for y in (center_y as i32 - self.radius as i32)..=(center_y as i32 + self.radius as i32)
+            {
+                if ((x as f64 - center_x).powi(2) + (y as f64 - center_y).powi(2)).sqrt()
+                    <= self.radius
+                    && x >= 0
+                    && y >= 0
+                    && (x as usize) < self.grid.len()
+                    && (y as usize) < self.grid[0].len()
+                {
+                    self.grid[x as usize][y as usize] = if state {
+                        Some(Cell::new(true, true, true, true))
+                    } else {
+                        None
+                    };
+                }
+            }
+        }
+    }
+
+    /// Resets the grid
+    pub fn reset(&mut self) {
+        self.grid = vec![vec![None; self.total_rows as usize]; self.total_columns as usize];
+    }
+
+
+    /// Drains the last row
+    pub fn drain(&mut self) {
+        let last_row = self.total_rows as usize - 1;
+        for column in 0..self.total_columns as usize {
+            self.grid[column][last_row] = None;
+        }
+    }
+
+    /// Draws the game
     pub fn draw(&self, engine: &mut ConsoleEngine) {
         for (columns, column) in self.grid.iter().enumerate() {
             for (rows, &cell) in column.iter().enumerate() {
@@ -183,5 +135,65 @@ impl Game {
                 }
             }
         }
+    }
+
+    /// Updates the game
+    pub fn update(&mut self) {
+        self.effect_topple(self.topple);
+        self.effect_gravity();
+    }
+
+    /// Applies the gravity effect
+    fn effect_gravity(&mut self) {
+        for column in 0..self.total_columns as usize {
+            for row in (0..self.total_rows as usize).rev() {
+                if self.grid[column][row].is_some()
+                    && row + 1 < self.total_rows as usize
+                    && self.grid[column][row + 1].is_none()
+                {
+                    self.grid[column][row + 1] = self.grid[column][row];
+                    self.grid[column][row] = None;
+                }
+            }
+        }
+    }
+
+    /// Applies the topple effect
+    fn effect_topple(&mut self, range: isize) {
+        for column in 0..self.total_columns as usize {
+            for row in (0..self.total_rows as usize).rev() {
+                if self.grid[column][row].is_some() {
+                    let direction = rand::random::<bool>();
+                    if self.check_topple_direction(column, row, range, direction) {
+                        continue;
+                    }
+                    self.check_topple_direction(column, row, range, !direction);
+                }
+            }
+        }
+    }
+
+    /// Checks if the cell can topple in the given direction and applies the topple effect
+    fn check_topple_direction(
+        &mut self,
+        column: usize,
+        row: usize,
+        range: isize,
+        direction: bool,
+    ) -> bool {
+        let new_col = (column as isize + if direction { -1 } else { 1 }) as usize;
+        let new_row = (row as isize + range) as usize;
+        if new_col < self.total_columns as usize
+            && new_row < self.total_rows as usize
+            && self.grid[new_col][new_row].is_none()
+            && (row == self.total_rows as usize - 1 || self.grid[column][row + 1].is_some())
+        {
+            self.grid[new_col][new_row] = self.grid[column][row];
+            self.grid[column][row] = None;
+
+            return true;
+        }
+
+        false
     }
 }
