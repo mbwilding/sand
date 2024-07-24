@@ -14,8 +14,8 @@ pub fn check(game: &mut Game) -> Result<()> {
                 // KeyCode::Char('j') | KeyCode::Down => game.move_down(),
                 KeyCode::Char('r') => game.reset(),
                 KeyCode::Char('d') => game.drain(),
-                KeyCode::Char(' ') => game.create(),
-                KeyCode::Char('x') => game.destroy(),
+                KeyCode::Char(' ') => game.apply(true),
+                KeyCode::Char('x') => game.apply(false),
                 KeyCode::Char('q') => game.quit(),
                 KeyCode::Char(c) if c.is_ascii_digit() => game.set_radius(c.to_digit(10).unwrap()),
                 _ => {}
@@ -27,11 +27,11 @@ pub fn check(game: &mut Game) -> Result<()> {
                 match m.kind {
                     event::MouseEventKind::Down(event::MouseButton::Left)
                     | event::MouseEventKind::Drag(event::MouseButton::Left) => {
-                        game.create();
+                        game.apply(true);
                     }
                     event::MouseEventKind::Down(event::MouseButton::Right)
                     | event::MouseEventKind::Drag(event::MouseButton::Right) => {
-                        game.destroy();
+                        game.apply(false);
                     }
                     _ => {}
                 }

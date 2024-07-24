@@ -56,15 +56,7 @@ impl Game {
         self.total_rows = new_rows;
     }
 
-    pub fn create(&mut self) {
-        self.apply_to_grid(true);
-    }
-
-    pub fn destroy(&mut self) {
-        self.apply_to_grid(false);
-    }
-
-    fn apply_to_grid(&mut self, state: bool) {
+    pub fn apply(&mut self, state: bool) {
         let center_x = self.selected_column as f64;
         let center_y = self.selected_row as f64;
 
