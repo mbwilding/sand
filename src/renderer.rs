@@ -9,7 +9,8 @@ pub fn render(mut game: Game) -> Result<()> {
     execute!(
         w,
         terminal::EnterAlternateScreen,
-        crossterm::event::EnableMouseCapture
+        crossterm::event::EnableMouseCapture,
+        cursor::Hide
     )?;
 
     terminal::enable_raw_mode()?;
@@ -17,12 +18,11 @@ pub fn render(mut game: Game) -> Result<()> {
     let mut previous_frame = vec![vec![None; game.grid[0].len()]; game.grid.len()];
 
     loop {
-        queue!(w, cursor::Hide)?;
-
         input::check(&mut game)?;
         if !game.running {
             break;
         }
+
         game.update();
 
         for (columns, column) in game.grid.iter().enumerate() {
