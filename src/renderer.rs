@@ -45,7 +45,7 @@ pub fn render(mut game: Game) -> Result<()> {
                         queue!(
                             w,
                             cursor::MoveTo(columns as u16, rows as u16),
-                            style::Print(" ")
+                            style::Print(' ')
                         )?;
                     }
                     previous_frame[columns][rows] = cell;
