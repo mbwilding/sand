@@ -4,6 +4,7 @@ use crossterm::terminal;
 
 #[derive(Debug)]
 pub struct Game {
+    pub running: bool,
     pub total_columns: u16,
     pub total_rows: u16,
     pub selected_column: u16,
@@ -16,6 +17,7 @@ pub struct Game {
 
 impl Game {
     pub fn new(fps: u64, topple: isize) -> Result<Self> {
+        let running = true;
         let (total_columns, total_rows) = terminal::size()?;
         let selected_column = total_columns / 2;
         let selected_row = total_rows / 2;
@@ -25,6 +27,7 @@ impl Game {
         let radius = 1.0;
 
         Ok(Self {
+            running,
             total_columns,
             total_rows,
             selected_column,
@@ -181,5 +184,9 @@ impl Game {
         }
 
         false
+    }
+
+    pub fn quit(&mut self) {
+        self.running = false;
     }
 }
