@@ -4,23 +4,30 @@ use console_engine::Color;
 use console_engine::ConsoleEngine;
 use console_engine::KeyCode;
 
+/// The game struct
 pub struct Game {
     pub total_columns: u16,
     pub total_rows: u16,
     pub topple: isize,
     pub radius: f64,
+    pub brush_min: f64,
+    pub brush_max: f64,
+    pub brush_step: f64,
     pub grid: Vec<Vec<Option<Cell>>>,
     pub exit: bool,
 }
 
 impl Game {
     /// Initializes the game
-    pub fn init(total_columns: u32, total_rows: u32) -> Self {
+    pub fn new(total_columns: u32, total_rows: u32) -> Self {
         Self {
             total_columns: total_columns as u16,
             total_rows: total_rows as u16,
             topple: 3,
             radius: 1.0,
+            brush_min: 0.0,
+            brush_max: 60.0,
+            brush_step: 0.5,
             grid: vec![vec![None; total_rows as usize]; total_columns as usize],
             exit: false,
         }
@@ -41,6 +48,16 @@ impl Game {
         // Exits the game
         if engine.is_key_pressed(KeyCode::Char('q')) {
             self.exit = true;
+        }
+
+        // Mouse scroll up increases the brush size
+        if engine.is_mouse_scrolled_up() {
+            self.radius = (self.radius + self.brush_step).min(self.brush_max);
+        }
+
+        // Mouse scroll down reduces the brush size
+        if engine.is_mouse_scrolled_down() {
+            self.radius = (self.radius - self.brush_step).max(self.brush_min);
         }
 
         // Applies the brush (Left click to draw, Right click to erase)
@@ -107,7 +124,6 @@ impl Game {
         self.grid = vec![vec![None; self.total_rows as usize]; self.total_columns as usize];
     }
 
-
     /// Drains the last row
     pub fn drain(&mut self) {
         let last_row = self.total_rows as usize - 1;
@@ -118,6 +134,7 @@ impl Game {
 
     /// Draws the game
     pub fn draw(&self, engine: &mut ConsoleEngine) {
+        // Draws the grid
         for (columns, column) in self.grid.iter().enumerate() {
             for (rows, &cell) in column.iter().enumerate() {
                 if let Some(cell) = cell {
@@ -135,6 +152,13 @@ impl Game {
                 }
             }
         }
+
+        // Draws the UI
+        engine.print(
+            0,
+            0,
+            &format!("Brush: {:.1}", self.radius),
+        );
     }
 
     /// Updates the game

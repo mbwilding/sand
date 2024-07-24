@@ -1,5 +1,6 @@
 use coolor::{Color, Hsl};
 
+/// The cell struct
 #[derive(Debug, Clone, Copy)]
 pub struct Cell {
     pub glyph: char,
@@ -7,6 +8,7 @@ pub struct Cell {
 }
 
 impl Cell {
+    /// Creates a new cell
     pub fn new(lower: bool, upper: bool, number: bool, symbol: bool) -> Cell {
         let hue = rand::random::<f32>() * 360.0;
         let saturation = 0.8;
@@ -44,7 +46,7 @@ impl Cell {
         } else if number {
             (rand::random::<u8>() % 10 + b'0') as char
         } else if symbol {
-            let symbols = b"!@#$%^&*()_+-=[]{}|;:',.<>?/";
+            let symbols = b"!@#$%^&*()_+-=[]{}|;:',.<>?/`~\"\\";
             symbols[rand::random::<usize>() % symbols.len()] as char
         } else {
             '�'

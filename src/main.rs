@@ -1,10 +1,12 @@
+use crate::game::Game;
+
 mod cell;
 mod game;
 
 fn main() {
     let mut engine = console_engine::ConsoleEngine::init_fill_require(10, 10, 60).unwrap();
 
-    let mut game = crate::game::Game::init(engine.get_width(), engine.get_height());
+    let mut game = Game::new(engine.get_width(), engine.get_height());
 
     loop {
         engine.wait_frame();
