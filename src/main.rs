@@ -14,6 +14,7 @@ fn main() {
         }
 
         if let Some((columns, rows)) = engine.get_resize() {
+            engine.resize(columns.into(), rows.into());
             game.resize(columns, rows);
         }
 

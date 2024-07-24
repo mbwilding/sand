@@ -25,10 +25,6 @@ impl Game {
         }
     }
 
-    pub fn set_radius(&mut self, size: u32) {
-        self.radius = size as f64;
-    }
-
     pub fn resize(&mut self, new_columns: u16, new_rows: u16) {
         let old_rows = self.total_rows as usize;
         self.grid
@@ -55,8 +51,11 @@ impl Game {
                     && (x as usize) < self.grid.len()
                     && (y as usize) < self.grid[0].len()
                 {
-                    self.grid[x as usize][y as usize] =
-                        if state { Some(Cell::new()) } else { None };
+                    self.grid[x as usize][y as usize] = if state {
+                        Some(Cell::new(true, true, true, true))
+                    } else {
+                        None
+                    };
                 }
             }
         }
@@ -130,26 +129,38 @@ impl Game {
     }
 
     pub fn input(&mut self, engine: &ConsoleEngine) {
+        // Resets the game
         if engine.is_key_pressed(KeyCode::Char('r')) {
             self.reset();
         }
+
+        // Drains the last row
         if engine.is_key_pressed(KeyCode::Char('d')) {
             self.drain();
         }
+
+        // Exits the game
         if engine.is_key_pressed(KeyCode::Char('q')) {
             self.exit = true;
         }
+
+        // Applies the brush (Left click to draw, Right click to erase)
         for button in [
             console_engine::MouseButton::Left,
             console_engine::MouseButton::Right,
         ] {
-            if let Some((column, row)) = engine.get_mouse_held(button) {
+            if let Some((column, row)) = engine
+                .get_mouse_held(button)
+                .or_else(|| engine.get_mouse_press(button))
+            {
                 self.apply(column, row, button == console_engine::MouseButton::Left);
             }
         }
+
+        // Sets the size of the brush
         for number in 0..=9 {
             if engine.is_key_pressed(KeyCode::Char(char::from_digit(number, 10).unwrap())) {
-                self.set_radius(number);
+                self.radius = number as f64;
             }
         }
     }
