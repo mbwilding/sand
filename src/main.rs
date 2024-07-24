@@ -1,12 +1,26 @@
-use anyhow::Result;
-use game::Game;
-
 mod cell;
 mod game;
-mod input;
-mod renderer;
 
-fn main() -> Result<()> {
-    let game = Game::new()?;
-    renderer::render(game)
+fn main() {
+    let mut engine = console_engine::ConsoleEngine::init_fill_require(10, 10, 60).unwrap();
+
+    let mut game = crate::game::Game::init(engine.get_width(), engine.get_height());
+
+    loop {
+        engine.wait_frame();
+
+        if game.exit {
+            break;
+        }
+
+        if let Some((columns, rows)) = engine.get_resize() {
+            game.resize(columns, rows);
+        }
+
+        engine.clear_screen();
+        game.input(&engine);
+        game.update();
+        game.draw(&mut engine);
+        engine.draw();
+    }
 }

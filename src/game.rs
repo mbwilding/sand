@@ -1,47 +1,35 @@
 use crate::cell::Cell;
-use anyhow::Result;
-use crossterm::terminal;
+use console_engine::pixel;
+use console_engine::Color;
+use console_engine::ConsoleEngine;
+use console_engine::KeyCode;
 
-#[derive(Debug)]
 pub struct Game {
-    pub running: bool,
     pub total_columns: u16,
     pub total_rows: u16,
-    pub selected_column: u16,
-    pub selected_row: u16,
-    pub grid: Vec<Vec<Option<Cell>>>,
     pub topple: isize,
     pub radius: f64,
+    pub grid: Vec<Vec<Option<Cell>>>,
+    pub exit: bool,
 }
 
 impl Game {
-    pub fn new() -> Result<Self> {
-        let running = true;
-        let (total_columns, total_rows) = terminal::size()?;
-        let selected_column = total_columns / 2;
-        let selected_row = total_rows / 2;
-        let grid: Vec<Vec<Option<Cell>>> =
-            vec![vec![None; total_rows as usize]; total_columns as usize];
-        let topple = 3;
-        let radius = 1.0;
-
-        Ok(Self {
-            running,
-            total_columns,
-            total_rows,
-            selected_column,
-            selected_row,
-            grid,
-            topple,
-            radius,
-        })
+    pub fn init(total_columns: u32, total_rows: u32) -> Self {
+        Self {
+            total_columns: total_columns as u16,
+            total_rows: total_rows as u16,
+            topple: 3,
+            radius: 1.0,
+            grid: vec![vec![None; total_rows as usize]; total_columns as usize],
+            exit: false,
+        }
     }
 
     pub fn set_radius(&mut self, size: u32) {
         self.radius = size as f64;
     }
 
-    pub fn resize_grid(&mut self, new_columns: u16, new_rows: u16) {
+    pub fn resize(&mut self, new_columns: u16, new_rows: u16) {
         let old_rows = self.total_rows as usize;
         self.grid
             .resize_with(new_columns as usize, || vec![None; old_rows]);
@@ -49,16 +37,13 @@ impl Game {
             column.resize(new_rows as usize, None);
         }
 
-        self.selected_column = self.selected_column.min(new_columns - 1);
-        self.selected_row = self.selected_row.min(new_rows - 1);
-
         self.total_columns = new_columns;
         self.total_rows = new_rows;
     }
 
-    pub fn apply(&mut self, state: bool) {
-        let center_x = self.selected_column as f64;
-        let center_y = self.selected_row as f64;
+    pub fn apply(&mut self, column: u32, row: u32, state: bool) {
+        let center_x = column as f64;
+        let center_y = row as f64;
 
         for x in (center_x as i32 - self.radius as i32)..=(center_x as i32 + self.radius as i32) {
             for y in (center_y as i32 - self.radius as i32)..=(center_y as i32 + self.radius as i32)
@@ -144,41 +129,48 @@ impl Game {
         false
     }
 
-    pub fn quit(&mut self) {
-        self.running = false;
+    pub fn input(&mut self, engine: &ConsoleEngine) {
+        if engine.is_key_pressed(KeyCode::Char('r')) {
+            self.reset();
+        }
+        if engine.is_key_pressed(KeyCode::Char('d')) {
+            self.drain();
+        }
+        if engine.is_key_pressed(KeyCode::Char('q')) {
+            self.exit = true;
+        }
+        for button in [
+            console_engine::MouseButton::Left,
+            console_engine::MouseButton::Right,
+        ] {
+            if let Some((column, row)) = engine.get_mouse_held(button) {
+                self.apply(column, row, button == console_engine::MouseButton::Left);
+            }
+        }
+        for number in 0..=9 {
+            if engine.is_key_pressed(KeyCode::Char(char::from_digit(number, 10).unwrap())) {
+                self.set_radius(number);
+            }
+        }
     }
 
-    /*
-        pub fn move_left(&mut self) {
-            if self.selected_column > 0 {
-                self.selected_column -= 1;
-            } else {
-                self.selected_column = self.total_columns - 1;
+    pub fn draw(&self, engine: &mut ConsoleEngine) {
+        for (columns, column) in self.grid.iter().enumerate() {
+            for (rows, &cell) in column.iter().enumerate() {
+                if let Some(cell) = cell {
+                    let rgb = cell.color.rgb();
+                    let color = Color::Rgb {
+                        r: rgb.r,
+                        g: rgb.g,
+                        b: rgb.b,
+                    };
+                    engine.set_pxl(
+                        columns as i32,
+                        rows as i32,
+                        pixel::pxl_fg(cell.glyph, color),
+                    );
+                }
             }
         }
-
-        pub fn move_right(&mut self) {
-            if self.selected_column < self.total_columns - 1 {
-                self.selected_column += 1;
-            } else {
-                self.selected_column = 0;
-            }
-        }
-
-        pub fn move_up(&mut self) {
-            if self.selected_row > 0 {
-                self.selected_row -= 1;
-            } else {
-                self.selected_row = self.total_rows - 1;
-            }
-        }
-
-        pub fn move_down(&mut self) {
-            if self.selected_row < self.total_rows - 1 {
-                self.selected_row += 1;
-            } else {
-                self.selected_row = 0;
-            }
-        }
-    */
+    }
 }
