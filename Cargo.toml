@@ -7,3 +7,12 @@ edition = "2021"
 console_engine = "2.6"
 coolor = { version = "0.9", features = ["crossterm"] }
 rand = "0.8"
+
+[profile.release]
+opt-level = "z"  # Optimize for size.
+lto = true  # Enable Link Time Optimization.
+codegen-units = 1  # Reduce the number of codegen units to enhance optimization.
+strip = true  # Remove symbol information for a smaller binary.
+panic = "abort"  # Aborts on panic, reducing the binary size.
+incremental = false  # Disable incremental compilation.
+overflow-checks = false  # Disable overflow checks if not required (unsafe).
