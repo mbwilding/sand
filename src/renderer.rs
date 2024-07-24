@@ -36,7 +36,7 @@ pub fn render(mut game: Game) -> Result<()> {
                     KeyCode::Char(' ') => game.create(),
                     KeyCode::Char('x') => game.destroy(),
                     KeyCode::Char('q') => break,
-                    KeyCode::Char(c) if c.is_digit(10) => game.set_radius(c.to_digit(10).unwrap()),
+                    KeyCode::Char(c) if c.is_ascii_digit() => game.set_radius(c.to_digit(10).unwrap()),
                     _ => {}
                 },
                 Event::Mouse(m) => {
