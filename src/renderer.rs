@@ -33,8 +33,8 @@ pub fn render(mut game: Game) -> Result<()> {
                     KeyCode::Char('j') | KeyCode::Down => game.move_down(),
                     KeyCode::Char('r') => game.reset(),
                     KeyCode::Char('d') => game.drain(),
-                    KeyCode::Char(' ') => game.cell_add_circle(),
-                    KeyCode::Delete => game.cell_remove(),
+                    KeyCode::Char(' ') => game.create(),
+                    KeyCode::Char('x') => game.destroy(),
                     KeyCode::Char('q') => break,
                     KeyCode::Char(c) if c.is_digit(10) => game.set_radius(c.to_digit(10).unwrap()),
                     _ => {}
@@ -46,11 +46,11 @@ pub fn render(mut game: Game) -> Result<()> {
                     match m.kind {
                         event::MouseEventKind::Down(event::MouseButton::Left)
                         | event::MouseEventKind::Drag(event::MouseButton::Left) => {
-                            game.cell_add_circle();
+                            game.create();
                         }
                         event::MouseEventKind::Down(event::MouseButton::Right)
                         | event::MouseEventKind::Drag(event::MouseButton::Right) => {
-                            game.cell_remove();
+                            game.destroy();
                         }
                         _ => {}
                     }

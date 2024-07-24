@@ -87,18 +87,15 @@ impl Game {
         self.total_rows = new_rows;
     }
 
-    pub fn is_current_cell_set(&mut self) -> bool {
-        self.grid[self.selected_column as usize][self.selected_row as usize].is_some()
+    pub fn create(&mut self) {
+        self.apply_to_grid(true);
     }
 
-    pub fn cell_add_single(&mut self) {
-        if !self.is_current_cell_set() {
-            self.grid[self.selected_column as usize][self.selected_row as usize] =
-                Some(Cell::new());
-        }
+    pub fn destroy(&mut self) {
+        self.apply_to_grid(false);
     }
 
-    pub fn cell_add_circle(&mut self) {
+    fn apply_to_grid(&mut self, state: bool) {
         let center_x = self.selected_column as f64;
         let center_y = self.selected_row as f64;
 
@@ -112,15 +109,10 @@ impl Game {
                     && (x as usize) < self.grid.len()
                     && (y as usize) < self.grid[0].len()
                 {
-                    self.grid[x as usize][y as usize] = Some(Cell::new());
+                    self.grid[x as usize][y as usize] =
+                        if state { Some(Cell::new()) } else { None };
                 }
             }
-        }
-    }
-
-    pub fn cell_remove(&mut self) {
-        if self.is_current_cell_set() {
-            self.grid[self.selected_column as usize][self.selected_row as usize] = None;
         }
     }
 
