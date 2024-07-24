@@ -9,21 +9,20 @@ pub struct Game {
     pub total_rows: u16,
     pub selected_column: u16,
     pub selected_row: u16,
-    pub speed: u64,
     pub grid: Vec<Vec<Option<Cell>>>,
     pub topple: isize,
     pub radius: f64,
 }
 
 impl Game {
-    pub fn new(fps: u64, topple: isize) -> Result<Self> {
+    pub fn new() -> Result<Self> {
         let running = true;
         let (total_columns, total_rows) = terminal::size()?;
         let selected_column = total_columns / 2;
         let selected_row = total_rows / 2;
         let grid: Vec<Vec<Option<Cell>>> =
             vec![vec![None; total_rows as usize]; total_columns as usize];
-        let speed = 1000 / fps;
+        let topple = 3;
         let radius = 1.0;
 
         Ok(Self {
@@ -33,7 +32,6 @@ impl Game {
             selected_column,
             selected_row,
             grid,
-            speed,
             topple,
             radius,
         })

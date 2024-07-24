@@ -1,10 +1,9 @@
 use crate::game::Game;
 use anyhow::{Ok, Result};
 use crossterm::event::{self, poll, Event, KeyCode};
-use std::time::Duration;
 
 pub fn check(game: &mut Game) -> Result<()> {
-    if poll(Duration::from_millis(game.speed))? {
+    if poll(std::time::Duration::from_millis(0))? {
         match crossterm::event::read()? {
             Event::FocusGained => {}
             Event::FocusLost => {}

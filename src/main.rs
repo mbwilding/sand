@@ -7,7 +7,6 @@ mod input;
 mod renderer;
 
 fn main() -> Result<()> {
-    let game = Game::new(60, 3)?;
-
+    let game = Game::new()?;
     renderer::render(game)
 }
