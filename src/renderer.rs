@@ -27,15 +27,16 @@ pub fn render(mut game: Game) -> Result<()> {
                 Event::FocusGained => {}
                 Event::FocusLost => {}
                 Event::Key(k) => match k.code {
-                    KeyCode::Char('q') => break,
-                    KeyCode::Char('r') => game.reset(),
-                    KeyCode::Char('d') => game.drain(),
                     KeyCode::Char('h') | KeyCode::Left => game.move_left(),
                     KeyCode::Char('l') | KeyCode::Right => game.move_right(),
                     KeyCode::Char('k') | KeyCode::Up => game.move_up(),
                     KeyCode::Char('j') | KeyCode::Down => game.move_down(),
-                    KeyCode::Char(' ') => game.cell_add(),
+                    KeyCode::Char('r') => game.reset(),
+                    KeyCode::Char('d') => game.drain(),
+                    KeyCode::Char(' ') => game.cell_add_circle(),
                     KeyCode::Delete => game.cell_remove(),
+                    KeyCode::Char('q') => break,
+                    KeyCode::Char(c) if c.is_digit(10) => game.set_radius(c.to_digit(10).unwrap()),
                     _ => {}
                 },
                 Event::Mouse(m) => {
@@ -45,7 +46,7 @@ pub fn render(mut game: Game) -> Result<()> {
                     match m.kind {
                         event::MouseEventKind::Down(event::MouseButton::Left)
                         | event::MouseEventKind::Drag(event::MouseButton::Left) => {
-                            game.cell_add();
+                            game.cell_add_circle();
                         }
                         event::MouseEventKind::Down(event::MouseButton::Right)
                         | event::MouseEventKind::Drag(event::MouseButton::Right) => {
@@ -83,14 +84,8 @@ pub fn render(mut game: Game) -> Result<()> {
 
         queue!(
             w,
-            cursor::MoveTo(0, 0),
-            style::SetBackgroundColor(style::Color::Black),
-            style::Print(" ".repeat(game.total_columns.into())),
-            cursor::MoveTo(0, 0),
-            style::Print("paint: left_mouse or space | erase: right_mouse or ctrl | drain: d | reset: r | quit: q"),
             cursor::MoveTo(game.selected_column, game.selected_row),
-            style::SetBackgroundColor(style::Color::Black),
-            style::SetForegroundColor(style::Color::White),
+            style::SetForegroundColor(style::Color::DarkGreen),
             style::Print("X"),
             style::ResetColor
         )?;
@@ -110,6 +105,3 @@ pub fn render(mut game: Game) -> Result<()> {
 
     Ok(())
 }
-
-// TODO: Below
-// Fix blocking loop

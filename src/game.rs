@@ -11,6 +11,7 @@ pub struct Game {
     pub speed: u64,
     pub grid: Vec<Vec<Option<Cell>>>,
     pub topple: isize,
+    pub radius: f64,
 }
 
 impl Game {
@@ -21,6 +22,7 @@ impl Game {
         let grid: Vec<Vec<Option<Cell>>> =
             vec![vec![None; total_rows as usize]; total_columns as usize];
         let speed = 1000 / fps;
+        let radius = 1.0;
 
         Ok(Self {
             total_columns,
@@ -30,7 +32,12 @@ impl Game {
             grid,
             speed,
             topple,
+            radius,
         })
+    }
+
+    pub fn set_radius(&mut self, size: u32) {
+        self.radius = size as f64;
     }
 
     pub fn move_left(&mut self) {
@@ -84,10 +91,30 @@ impl Game {
         self.grid[self.selected_column as usize][self.selected_row as usize].is_some()
     }
 
-    pub fn cell_add(&mut self) {
+    pub fn cell_add_single(&mut self) {
         if !self.is_current_cell_set() {
             self.grid[self.selected_column as usize][self.selected_row as usize] =
                 Some(Cell::new());
+        }
+    }
+
+    pub fn cell_add_circle(&mut self) {
+        let center_x = self.selected_column as f64;
+        let center_y = self.selected_row as f64;
+
+        for x in (center_x as i32 - self.radius as i32)..=(center_x as i32 + self.radius as i32) {
+            for y in (center_y as i32 - self.radius as i32)..=(center_y as i32 + self.radius as i32)
+            {
+                if ((x as f64 - center_x).powi(2) + (y as f64 - center_y).powi(2)).sqrt()
+                    <= self.radius
+                    && x >= 0
+                    && y >= 0
+                    && (x as usize) < self.grid.len()
+                    && (y as usize) < self.grid[0].len()
+                {
+                    self.grid[x as usize][y as usize] = Some(Cell::new());
+                }
+            }
         }
     }
 
