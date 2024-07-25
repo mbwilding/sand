@@ -19,9 +19,9 @@ pub struct Game {
     brush_current: f64,
     grid: Vec<Vec<Option<Cell>>>,
     help: bool,
-    help_pad: i32,
-    help_start_x: i32,
-    help_start_y: i32,
+    window_pad: i32,
+    help_start_column: i32,
+    help_start_row: i32,
     help_color_fg: Color,
     help_color_bg: Color,
 }
@@ -43,9 +43,9 @@ impl Game {
             brush_current: brush,
             grid: vec![vec![None; rows as usize]; columns as usize],
             help: false,
-            help_pad: 1,
-            help_start_x: 1,
-            help_start_y: 2,
+            window_pad: 1,
+            help_start_column: 1,
+            help_start_row: 1,
             help_color_fg: Color::Green,
             help_color_bg: Color::Black,
         }
@@ -182,8 +182,7 @@ impl Game {
 
         // Conditionally draws the help UI
         if self.help {
-            // Content
-            let help_content = format!(
+            self.draw_window(engine, "help", &format!(
                 r"
 mouse_l: add
 mouse_r: remove
@@ -194,51 +193,47 @@ q: quit
 
 brush_size: {:.1}",
                 self.brush_current
-            );
+            ), self.help_start_column, self.help_start_row, self.help_color_fg, self.help_color_bg);
+        }
+    }
 
-            // Colors
-            let fg = self.help_color_fg;
-            let bg = self.help_color_bg;
-
-            // Position
-            let pad = self.help_pad + 1;
-            let border_start_x = self.help_start_x;
-            let border_start_y = self.help_start_y;
-            let border_end_x = border_start_x
+    /// Draw a window
+    pub fn draw_window(&self, engine: &mut ConsoleEngine, title: &str, content: &str, start_column: i32, start_row: i32, fg: Color, bg: Color) {
+            // Positions
+            let pad = self.window_pad + 1;
+            let end_column = start_column
                 + pad
                 + 1
-                + help_content
+                + content
                     .lines()
                     .map(|line| line.len())
                     .max()
                     .unwrap_or(0) as i32;
-            let border_end_y = border_start_y + help_content.lines().count() as i32;
-            let content_offset_x = border_start_x + pad;
-
-            // Title
-            let title_x = border_start_x + 1;
-            engine.print_fbg(title_x, border_start_y - 1, " sand:", bg, fg);
-            engine.print_fbg(title_x + 6, border_start_y - 1, " help ", fg, bg);
+            let end_row = start_row + content.lines().count() as i32;
+            let content_offset_x = start_column + pad;
 
             // Border
             engine.fill_rect(
-                border_start_x,
-                border_start_y,
-                border_end_x,
-                border_end_y,
+                start_column,
+                start_row,
+                end_column,
+                end_row,
                 pixel::Pixel { fg, bg, chr: ' ' },
             );
             engine.rect_border(
-                border_start_x,
-                border_start_y,
-                border_end_x,
-                border_end_y,
+                start_column,
+                start_row,
+                end_column,
+                end_row,
                 BorderStyle::new_heavy().with_colors(fg, bg),
             );
 
-            // Print the content in the border
-            engine.print_fbg(content_offset_x, border_start_y, &help_content, fg, bg);
-        }
+            // Title
+            let title_x = start_column + 2;
+            engine.print_fbg(title_x, start_row, title, bg, fg);
+
+            // Content
+            engine.print_fbg(content_offset_x, start_row, &content, fg, bg);
     }
 
     /// Updates the game
