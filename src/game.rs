@@ -1,6 +1,6 @@
 use crate::cell::Cell;
+use crate::window::draw_window;
 use console_engine::pixel;
-use console_engine::rect_style::BorderStyle;
 use console_engine::Color;
 use console_engine::ConsoleEngine;
 use console_engine::KeyCode;
@@ -18,12 +18,14 @@ pub struct Game {
     brush_step: f64,
     brush_current: f64,
     grid: Vec<Vec<Option<Cell>>>,
-    help: bool,
-    window_pad: i32,
-    help_start_column: i32,
-    help_start_row: i32,
-    help_color_fg: Color,
-    help_color_bg: Color,
+    window_padding: u16,
+    window_help: Window,
+}
+
+struct Window {
+    state: bool,
+    fg: Color,
+    bg: Color,
 }
 
 impl Game {
@@ -42,12 +44,12 @@ impl Game {
             brush_step: brush,
             brush_current: brush,
             grid: vec![vec![None; rows as usize]; columns as usize],
-            help: false,
-            window_pad: 1,
-            help_start_column: 1,
-            help_start_row: 1,
-            help_color_fg: Color::Green,
-            help_color_bg: Color::Black,
+            window_padding: 3,
+            window_help: Window {
+                state: false,
+                fg: Color::Green,
+                bg: Color::Black,
+            },
         }
     }
 
@@ -65,7 +67,7 @@ impl Game {
 
         // Toggles the help UI
         if engine.is_key_pressed(KeyCode::Char('h')) {
-            self.toggle_help();
+            self.toggle_help_window();
         }
 
         // Exits the game
@@ -100,8 +102,8 @@ impl Game {
     }
 
     /// Toggles the help UI
-    pub fn toggle_help(&mut self) {
-        self.help = !self.help;
+    pub fn toggle_help_window(&mut self) {
+        self.window_help.state = !self.window_help.state;
     }
 
     /// Resizes the grid
@@ -181,59 +183,31 @@ impl Game {
         }
 
         // Conditionally draws the help UI
-        if self.help {
-            self.draw_window(engine, "help", &format!(
-                r"
-mouse_l: add
-mouse_r: remove
-mouse_wheel: brush_size
-r: reset
-d: drain
-q: quit
+        if self.window_help.state {
+            draw_window(
+                engine,
+                "help",
+                &format!(
+                    r"bindings
+━━━━━━━━
+add        ┃ mouse_l
+remove     ┃ mouse_r
+brush_size ┃ mouse_wheel
+reset      ┃ r
+drain      ┃ d
+quit       ┃ q
 
+state
+━━━━━
 brush_size: {:.1}",
-                self.brush_current
-            ), self.help_start_column, self.help_start_row, self.help_color_fg, self.help_color_bg);
+                    self.brush_current
+                ),
+                self.window_help.fg,
+                self.window_help.bg,
+                self.window_padding,
+                (self.column_total / 2, self.row_total / 2)
+            );
         }
-    }
-
-    /// Draw a window
-    pub fn draw_window(&self, engine: &mut ConsoleEngine, title: &str, content: &str, start_column: i32, start_row: i32, fg: Color, bg: Color) {
-            // Positions
-            let pad = self.window_pad + 1;
-            let end_column = start_column
-                + pad
-                + 1
-                + content
-                    .lines()
-                    .map(|line| line.len())
-                    .max()
-                    .unwrap_or(0) as i32;
-            let end_row = start_row + content.lines().count() as i32;
-            let content_offset_x = start_column + pad;
-
-            // Border
-            engine.fill_rect(
-                start_column,
-                start_row,
-                end_column,
-                end_row,
-                pixel::Pixel { fg, bg, chr: ' ' },
-            );
-            engine.rect_border(
-                start_column,
-                start_row,
-                end_column,
-                end_row,
-                BorderStyle::new_heavy().with_colors(fg, bg),
-            );
-
-            // Title
-            let title_x = start_column + 2;
-            engine.print_fbg(title_x, start_row, title, bg, fg);
-
-            // Content
-            engine.print_fbg(content_offset_x, start_row, &content, fg, bg);
     }
 
     /// Updates the game

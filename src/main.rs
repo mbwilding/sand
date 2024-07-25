@@ -2,6 +2,7 @@ use crate::game::Game;
 
 mod cell;
 mod game;
+mod window;
 
 fn main() {
     let mut engine = console_engine::ConsoleEngine::init_fill_require(10, 10, 60).unwrap();
