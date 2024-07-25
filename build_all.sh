@@ -7,10 +7,10 @@ set -o pipefail
 targets=(
     "x86_64-unknown-linux-gnu"
     "x86_64-pc-windows-gnu"
-    "aarch64-apple-darwin"
     # "x86_64-apple-darwin"
     # "aarch64-unknown-linux-gnu"
     # "aarch64-pc-windows-gnu"
+    # "aarch64-apple-darwin"
 )
 
 # Ensure cross is installed
