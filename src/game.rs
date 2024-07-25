@@ -177,15 +177,16 @@ impl Game {
             let bg = Color::Black;
 
             // Position
-            let content_offset_x = 2;
-            let border_start_x = 0;
-            let border_start_y = 1;
+            let border_start_x = 1;
+            let border_start_y = 2;
             let border_end_x = border_start_x + 26;
             let border_end_y = border_start_y + 9;
+            let content_offset_x = border_start_x + 1;
 
             // Title
-            engine.print_fbg(1, border_start_y - 1, " sand:", bg, fg);
-            engine.print_fbg(7, border_start_y - 1, " help ", fg, bg);
+            let title_x = border_start_x + 1;
+            engine.print_fbg(title_x, border_start_y - 1, " sand:", bg, fg);
+            engine.print_fbg(title_x + 6, border_start_y - 1, " help ", fg, bg);
 
             // Border
             engine.fill_rect(
