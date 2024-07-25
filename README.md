@@ -1,4 +1,8 @@
-# sand-tui
+# Sand
+
+### What is Sand?
+
+Sand is an engaging and interactive terminal physics sandbox.
 
 ### Showcase
 
@@ -6,4 +10,4 @@
 
 ### Instructions
 
-Press **h** to show the help menu
+Press **h** to display the help menu.
