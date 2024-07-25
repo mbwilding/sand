@@ -8,7 +8,6 @@ use console_engine::KeyCode;
 /// The game struct
 pub struct Game {
     pub exit: bool,
-    help: bool,
     column_total: u16,
     row_total: u16,
     column_current: u16,
@@ -19,6 +18,11 @@ pub struct Game {
     brush_step: f64,
     brush_current: f64,
     grid: Vec<Vec<Option<Cell>>>,
+    help: bool,
+    help_start_x: i32,
+    help_start_y: i32,
+    color_fg: Color,
+    color_bg: Color,
 }
 
 impl Game {
@@ -27,7 +31,6 @@ impl Game {
         let brush = 0.7;
         Self {
             exit: false,
-            help: false,
             column_total: columns as u16,
             row_total: rows as u16,
             column_current: (columns / 2) as u16,
@@ -38,6 +41,11 @@ impl Game {
             brush_step: brush,
             brush_current: brush,
             grid: vec![vec![None; rows as usize]; columns as usize],
+            help: false,
+            help_start_x: 1,
+            help_start_y: 2,
+            color_fg: Color::Green,
+            color_bg: Color::Black,
         }
     }
 
@@ -173,12 +181,12 @@ impl Game {
         // Conditionally draws the help UI
         if self.help {
             // Colors
-            let fg = Color::Green;
-            let bg = Color::Black;
+            let fg = self.color_fg;
+            let bg = self.color_bg;
 
             // Position
-            let border_start_x = 1;
-            let border_start_y = 2;
+            let border_start_x = self.help_start_x;
+            let border_start_y = self.help_start_y;
             let border_end_x = border_start_x + 26;
             let border_end_y = border_start_y + 9;
             let content_offset_x = border_start_x + 1;
