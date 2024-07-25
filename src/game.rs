@@ -1,5 +1,6 @@
 use crate::cell::Cell;
 use console_engine::pixel;
+use console_engine::rect_style::BorderStyle;
 use console_engine::Color;
 use console_engine::ConsoleEngine;
 use console_engine::KeyCode;
@@ -7,6 +8,7 @@ use console_engine::KeyCode;
 /// The game struct
 pub struct Game {
     pub exit: bool,
+    help: bool,
     column_total: u16,
     row_total: u16,
     column_current: u16,
@@ -25,6 +27,7 @@ impl Game {
         let brush = 0.7;
         Self {
             exit: false,
+            help: false,
             column_total: columns as u16,
             row_total: rows as u16,
             column_current: (columns / 2) as u16,
@@ -48,6 +51,11 @@ impl Game {
         // Drains the last row
         if engine.is_key_pressed(KeyCode::Char('d')) {
             self.drain();
+        }
+
+        // Toggles the help UI
+        if engine.is_key_pressed(KeyCode::Char('h')) {
+            self.toggle_help();
         }
 
         // Exits the game
@@ -79,6 +87,11 @@ impl Game {
                 self.apply(button == console_engine::MouseButton::Left);
             }
         }
+    }
+
+    /// Toggles the help UI
+    pub fn toggle_help(&mut self) {
+        self.help = !self.help;
     }
 
     /// Resizes the grid
@@ -157,21 +170,30 @@ impl Game {
             }
         }
 
-        // Draws the UI
-        engine.print_fbg(1, 0, "Mouse L: Create", Color::Green, Color::Reset);
-        engine.print_fbg(1, 1, "Mouse R: Destroy", Color::Yellow, Color::Reset);
-        engine.print_fbg(1, 2, "Mouse Wheel: Brush Size", Color::Blue, Color::Reset);
-        engine.print_fbg(1, 3, "R: Reset", Color::Cyan, Color::Reset);
-        engine.print_fbg(1, 4, "D: Drain", Color::Magenta, Color::Reset);
-        engine.print_fbg(1, 5, "Q: Quit", Color::Red, Color::Reset);
-        engine.print_fbg(1, 6, "Brush Size:", Color::Grey, Color::Reset);
-        engine.print_fbg(
-            13,
-            6,
-            &format!("{:.1}", self.brush_current),
-            Color::White,
-            Color::Reset,
-        );
+        // Conditionally draws the help UI
+        if self.help {
+            let offset = 1;
+
+            engine.print_fbg(1, offset - 1, "sand-tui:", Color::Black, Color::Green);
+            engine.print_fbg(10, offset - 1, " help", Color::Green, Color::Black);
+
+            engine.rect_border(0, offset + 0, 24, offset + 9, BorderStyle::new_heavy().with_colors(Color::Red, Color::Black));
+
+            engine.print_fbg(1, offset + 1, "mouse_l: add", Color::Green, Color::Reset);
+            engine.print_fbg(1, offset + 2, "mouse_r: remove", Color::Yellow, Color::Reset);
+            engine.print_fbg(1, offset + 3, "mouse_wheel: brush_size", Color::Blue, Color::Reset);
+            engine.print_fbg(1, offset + 4, "r: reset", Color::Cyan, Color::Reset);
+            engine.print_fbg(1, offset + 5, "d: drain", Color::Magenta, Color::Reset);
+            engine.print_fbg(1, offset + 6, "q: quit", Color::Red, Color::Reset);
+            engine.print_fbg(1, offset + 8, "brush_size:", Color::Grey, Color::Reset);
+            engine.print_fbg(
+                13,
+                offset + 8,
+                &format!("{:.1}", self.brush_current),
+                Color::White,
+                Color::Reset,
+            );
+        }
     }
 
     /// Updates the game
