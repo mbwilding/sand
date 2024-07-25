@@ -219,13 +219,13 @@ impl Game {
         direction: bool,
     ) -> bool {
         let new_col = (column as isize + if direction { -1 } else { 1 }) as usize;
-        let new_row = (row as isize + range) as usize;
+        let row_check = (row as isize + range) as usize;
         if new_col < self.column_total as usize
-            && new_row < self.row_total as usize
-            && self.grid[new_col][new_row].is_none()
+            && row_check < self.row_total as usize
+            && self.grid[new_col][row_check].is_none()
             && (row == self.row_total as usize - 1 || self.grid[column][row + 1].is_some())
         {
-            self.grid[new_col][new_row] = self.grid[column][row];
+            self.grid[new_col][row] = self.grid[column][row];
             self.grid[column][row] = None;
 
             return true;
