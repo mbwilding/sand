@@ -6,8 +6,4 @@
 
 ### Instructions
 
-```
-cargo run --release
-```
-
 Press **h** to show the help menu
