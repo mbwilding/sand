@@ -5,6 +5,9 @@ on:
     tags:
       - "v*"
 
+permissions:
+  contents: write
+
 env:
   CRATE_NAME: sand
   GITHUB_TOKEN: ${{ github.token }}
