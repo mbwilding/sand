@@ -11,3 +11,9 @@ Sand is an engaging and interactive terminal physics sandbox.
 ### Instructions
 
 Press **h** to display the help menu.
+
+### Install
+
+#### Arch (AUR)
+
+[Sand](https://aur.archlinux.org/packages/sand)
