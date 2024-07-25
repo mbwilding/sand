@@ -19,10 +19,11 @@ pub struct Game {
     brush_current: f64,
     grid: Vec<Vec<Option<Cell>>>,
     help: bool,
+    help_pad: i32,
     help_start_x: i32,
     help_start_y: i32,
-    color_fg: Color,
-    color_bg: Color,
+    help_color_fg: Color,
+    help_color_bg: Color,
 }
 
 impl Game {
@@ -42,10 +43,11 @@ impl Game {
             brush_current: brush,
             grid: vec![vec![None; rows as usize]; columns as usize],
             help: false,
+            help_pad: 1,
             help_start_x: 1,
             help_start_y: 2,
-            color_fg: Color::Green,
-            color_bg: Color::Black,
+            help_color_fg: Color::Green,
+            help_color_bg: Color::Black,
         }
     }
 
@@ -180,16 +182,38 @@ impl Game {
 
         // Conditionally draws the help UI
         if self.help {
+            // Content
+            let help_content = format!(
+                r"
+mouse_l: add
+mouse_r: remove
+mouse_wheel: brush_size
+r: reset
+d: drain
+q: quit
+
+brush_size: {:.1}",
+                self.brush_current
+            );
+
             // Colors
-            let fg = self.color_fg;
-            let bg = self.color_bg;
+            let fg = self.help_color_fg;
+            let bg = self.help_color_bg;
 
             // Position
+            let pad = self.help_pad + 1;
             let border_start_x = self.help_start_x;
             let border_start_y = self.help_start_y;
-            let border_end_x = border_start_x + 26;
-            let border_end_y = border_start_y + 9;
-            let content_offset_x = border_start_x + 1;
+            let border_end_x = border_start_x
+                + pad
+                + 1
+                + help_content
+                    .lines()
+                    .map(|line| line.len())
+                    .max()
+                    .unwrap_or(0) as i32;
+            let border_end_y = border_start_y + help_content.lines().count() as i32;
+            let content_offset_x = border_start_x + pad;
 
             // Title
             let title_x = border_start_x + 1;
@@ -212,33 +236,8 @@ impl Game {
                 BorderStyle::new_heavy().with_colors(fg, bg),
             );
 
-            // Content
-            engine.print_fbg(content_offset_x, border_start_y + 1, "mouse_l: add", fg, bg);
-            engine.print_fbg(
-                content_offset_x,
-                border_start_y + 2,
-                "mouse_r: remove",
-                fg,
-                bg,
-            );
-            engine.print_fbg(
-                content_offset_x,
-                border_start_y + 3,
-                "mouse_wheel: brush_size",
-                fg,
-                bg,
-            );
-            engine.print_fbg(content_offset_x, border_start_y + 4, "r: reset", fg, bg);
-            engine.print_fbg(content_offset_x, border_start_y + 5, "d: drain", fg, bg);
-            engine.print_fbg(content_offset_x, border_start_y + 6, "q: quit", fg, bg);
-            engine.print_fbg(content_offset_x, border_start_y + 8, "brush_size:", fg, bg);
-            engine.print_fbg(
-                content_offset_x + 12,
-                border_start_y + 8,
-                &format!("{:.1}", self.brush_current),
-                fg,
-                bg,
-            );
+            // Print the content in the border
+            engine.print_fbg(content_offset_x, border_start_y, &help_content, fg, bg);
         }
     }
 
