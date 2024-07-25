@@ -206,8 +206,20 @@ impl Game {
 
             // Content
             engine.print_fbg(content_offset_x, border_start_y + 1, "mouse_l: add", fg, bg);
-            engine.print_fbg(content_offset_x, border_start_y + 2, "mouse_r: remove", fg, bg);
-            engine.print_fbg(content_offset_x, border_start_y + 3, "mouse_wheel: brush_size", fg, bg);
+            engine.print_fbg(
+                content_offset_x,
+                border_start_y + 2,
+                "mouse_r: remove",
+                fg,
+                bg,
+            );
+            engine.print_fbg(
+                content_offset_x,
+                border_start_y + 3,
+                "mouse_wheel: brush_size",
+                fg,
+                bg,
+            );
             engine.print_fbg(content_offset_x, border_start_y + 4, "r: reset", fg, bg);
             engine.print_fbg(content_offset_x, border_start_y + 5, "d: drain", fg, bg);
             engine.print_fbg(content_offset_x, border_start_y + 6, "q: quit", fg, bg);
