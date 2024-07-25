@@ -200,7 +200,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "sand-tui"
+name = "sand"
 version = "0.1.0"
 dependencies = [
  "console_engine",
