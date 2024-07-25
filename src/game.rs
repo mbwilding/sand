@@ -201,10 +201,9 @@ impl Game {
             for row in (0..self.row_total as usize).rev() {
                 if self.grid[column][row].is_some() {
                     let direction = rand::random::<bool>();
-                    if self.check_topple_direction(column, row, range, direction) {
-                        continue;
+                    if !self.check_topple_direction(column, row, range, direction) {
+                        self.check_topple_direction(column, row, range, !direction);
                     }
-                    self.check_topple_direction(column, row, range, !direction);
                 }
             }
         }
