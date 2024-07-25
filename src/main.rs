@@ -2,6 +2,7 @@ use crate::game::Game;
 
 mod cell;
 mod game;
+mod input;
 mod window;
 
 fn main() {
@@ -22,7 +23,7 @@ fn main() {
         }
 
         engine.clear_screen();
-        game.input(&engine);
+        input::check(&mut game, &engine);
         game.update();
         game.draw(&mut engine);
         engine.draw();

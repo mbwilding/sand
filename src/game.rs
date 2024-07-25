@@ -3,20 +3,19 @@ use crate::window::draw_window;
 use console_engine::pixel;
 use console_engine::Color;
 use console_engine::ConsoleEngine;
-use console_engine::KeyCode;
 
 /// The game struct
 pub struct Game {
     pub exit: bool,
-    column_total: u16,
-    row_total: u16,
-    column_current: u16,
-    row_current: u16,
-    topple: isize,
+    pub current_column: u16,
+    pub current_row: u16,
     brush_max: f64,
     brush_min: f64,
     brush_step: f64,
     brush_current: f64,
+    column_total: u16,
+    row_total: u16,
+    topple: isize,
     grid: Vec<Vec<Option<Cell>>>,
     window_padding: u16,
     window_help: Window,
@@ -34,15 +33,15 @@ impl Game {
         let brush = 0.7;
         Self {
             exit: false,
-            column_total: columns as u16,
-            row_total: rows as u16,
-            column_current: (columns / 2) as u16,
-            row_current: (rows / 2) as u16,
-            topple: 3,
+            current_column: (columns / 2) as u16,
+            current_row: (rows / 2) as u16,
             brush_max: 60.9,
             brush_min: brush,
             brush_step: brush,
             brush_current: brush,
+            column_total: columns as u16,
+            row_total: rows as u16,
+            topple: 3,
             grid: vec![vec![None; rows as usize]; columns as usize],
             window_padding: 3,
             window_help: Window {
@@ -50,54 +49,6 @@ impl Game {
                 fg: Color::Green,
                 bg: Color::Black,
             },
-        }
-    }
-
-    /// Handles the input
-    pub fn input(&mut self, engine: &ConsoleEngine) {
-        // Resets the game
-        if engine.is_key_pressed(KeyCode::Char('r')) {
-            self.reset();
-        }
-
-        // Drains the last row
-        if engine.is_key_pressed(KeyCode::Char('d')) {
-            self.drain();
-        }
-
-        // Toggles the help UI
-        if engine.is_key_pressed(KeyCode::Char('h')) {
-            self.toggle_help_window();
-        }
-
-        // Exits the game
-        if engine.is_key_pressed(KeyCode::Char('q')) {
-            self.exit = true;
-        }
-
-        // Mouse scroll up increases the brush size
-        if engine.is_mouse_scrolled_up() {
-            self.brush_current = (self.brush_current + self.brush_step).min(self.brush_max);
-        }
-
-        // Mouse scroll down reduces the brush size
-        if engine.is_mouse_scrolled_down() {
-            self.brush_current = (self.brush_current - self.brush_step).max(self.brush_min);
-        }
-
-        // Applies the brush (Left click to draw, Right click to erase)
-        for button in [
-            console_engine::MouseButton::Left,
-            console_engine::MouseButton::Right,
-        ] {
-            if let Some((column, row)) = engine
-                .get_mouse_held(button)
-                .or_else(|| engine.get_mouse_press(button))
-            {
-                self.column_current = column as u16;
-                self.row_current = row as u16;
-                self.apply(button == console_engine::MouseButton::Left);
-            }
         }
     }
 
@@ -121,8 +72,8 @@ impl Game {
 
     /// Applies the brush to the grid
     pub fn apply(&mut self, state: bool) {
-        let center_x = self.column_current as f64;
-        let center_y = self.row_current as f64;
+        let center_x = self.current_column as f64;
+        let center_y = self.current_row as f64;
 
         for x in (center_x as i32 - self.brush_current as i32)
             ..=(center_x as i32 + self.brush_current as i32)
@@ -145,6 +96,16 @@ impl Game {
                 }
             }
         }
+    }
+
+    /// Increases the brush size
+    pub fn brush_increase(&mut self) {
+        self.brush_current = (self.brush_current + self.brush_step).min(self.brush_max);
+    }
+
+    /// Decreases the brush size
+    pub fn brush_decrease(&mut self) {
+        self.brush_current = (self.brush_current - self.brush_step).max(self.brush_min);
     }
 
     /// Resets the grid
@@ -186,13 +147,13 @@ impl Game {
         if self.window_help.state {
             draw_window(
                 engine,
-                "help",
+                "HELP",
                 &format!(
                     r"bindings
 ━━━━━━━━
 add        ┃ mouse_l
 remove     ┃ mouse_r
-brush_size ┃ mouse_wheel
+brush_size ┃ mouse_wheel, -/=
 reset      ┃ r
 drain      ┃ d
 help       ┃ h
@@ -200,13 +161,14 @@ quit       ┃ q
 
 state
 ━━━━━
-brush_size: {:.1}",
-                    self.brush_current
+brush_size: {:.1}
+current_pos: ({}, {})",
+                    self.brush_current, self.current_column, self.current_row,
                 ),
                 self.window_help.fg,
                 self.window_help.bg,
                 self.window_padding,
-                (self.column_total / 2, self.row_total / 2)
+                (self.column_total / 2, self.row_total / 2),
             );
         }
     }
