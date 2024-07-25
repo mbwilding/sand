@@ -172,26 +172,51 @@ impl Game {
 
         // Conditionally draws the help UI
         if self.help {
-            let offset = 1;
+            // Colors
+            let fg = Color::Green;
+            let bg = Color::Black;
 
-            engine.print_fbg(1, offset - 1, "sand-tui:", Color::Black, Color::Green);
-            engine.print_fbg(10, offset - 1, " help", Color::Green, Color::Black);
+            // Position
+            let content_offset_x = 2;
+            let border_start_x = 0;
+            let border_start_y = 1;
+            let border_end_x = border_start_x + 26;
+            let border_end_y = border_start_y + 9;
 
-            engine.rect_border(0, offset + 0, 24, offset + 9, BorderStyle::new_heavy().with_colors(Color::Red, Color::Black));
+            // Title
+            engine.print_fbg(1, border_start_y - 1, " sand:", bg, fg);
+            engine.print_fbg(7, border_start_y - 1, " help ", fg, bg);
 
-            engine.print_fbg(1, offset + 1, "mouse_l: add", Color::Green, Color::Reset);
-            engine.print_fbg(1, offset + 2, "mouse_r: remove", Color::Yellow, Color::Reset);
-            engine.print_fbg(1, offset + 3, "mouse_wheel: brush_size", Color::Blue, Color::Reset);
-            engine.print_fbg(1, offset + 4, "r: reset", Color::Cyan, Color::Reset);
-            engine.print_fbg(1, offset + 5, "d: drain", Color::Magenta, Color::Reset);
-            engine.print_fbg(1, offset + 6, "q: quit", Color::Red, Color::Reset);
-            engine.print_fbg(1, offset + 8, "brush_size:", Color::Grey, Color::Reset);
+            // Border
+            engine.fill_rect(
+                border_start_x,
+                border_start_y,
+                border_end_x,
+                border_end_y,
+                pixel::Pixel { fg, bg, chr: ' ' },
+            );
+            engine.rect_border(
+                border_start_x,
+                border_start_y,
+                border_end_x,
+                border_end_y,
+                BorderStyle::new_heavy().with_colors(fg, bg),
+            );
+
+            // Content
+            engine.print_fbg(content_offset_x, border_start_y + 1, "mouse_l: add", fg, bg);
+            engine.print_fbg(content_offset_x, border_start_y + 2, "mouse_r: remove", fg, bg);
+            engine.print_fbg(content_offset_x, border_start_y + 3, "mouse_wheel: brush_size", fg, bg);
+            engine.print_fbg(content_offset_x, border_start_y + 4, "r: reset", fg, bg);
+            engine.print_fbg(content_offset_x, border_start_y + 5, "d: drain", fg, bg);
+            engine.print_fbg(content_offset_x, border_start_y + 6, "q: quit", fg, bg);
+            engine.print_fbg(content_offset_x, border_start_y + 8, "brush_size:", fg, bg);
             engine.print_fbg(
-                13,
-                offset + 8,
+                content_offset_x + 12,
+                border_start_y + 8,
                 &format!("{:.1}", self.brush_current),
-                Color::White,
-                Color::Reset,
+                fg,
+                bg,
             );
         }
     }
