@@ -195,6 +195,7 @@ remove     ┃ mouse_r
 brush_size ┃ mouse_wheel
 reset      ┃ r
 drain      ┃ d
+help       ┃ h
 quit       ┃ q
 
 state

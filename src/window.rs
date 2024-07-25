@@ -11,23 +11,21 @@ pub fn draw_window(
     (center_column, center_row): (u16, u16),
 ) {
     let padding = (padding + 1) as i32;
+    let half_padding = padding / 2;
     let content_lines: Vec<&str> = content.lines().collect();
+    let content_line_count = content_lines.len() as i32;
     let max_line_length = content_lines
         .iter()
-        .map(|line| line.len())
+        .map(|line| line.chars().count())
         .max()
         .unwrap_or(0) as i32;
-    let content_line_count = content_lines.len() as i32;
-
-    let half_padding = padding / 2;
-
-    let start_column = center_column as i32 - (padding + max_line_length / 2);
-    let start_row = center_row as i32 - (half_padding + content_line_count / 2);
 
     // Positions
+    let start_column = center_column as i32 - (padding + max_line_length / 2);
+    let start_row = center_row as i32 - (half_padding + content_line_count / 2);
     let start_content_column = start_column + padding;
     let start_content_row = start_row + half_padding;
-    let end_column = start_column + padding * 2 - 1 + max_line_length;
+    let end_column = start_content_column + max_line_length + padding - 1;
     let end_row = start_content_row + half_padding - 1 + content_line_count;
 
     // Border
