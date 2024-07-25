@@ -2,11 +2,8 @@ name: Tests and Release
 
 on:
   push:
-    branches:
-      - "**"
-    tags-ignore:
-      - "sand-*"
-  pull_request:
+    tags:
+      - "v*"
 
 env:
   CRATE_NAME: sand
