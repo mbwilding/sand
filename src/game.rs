@@ -6,30 +6,35 @@ use console_engine::KeyCode;
 
 /// The game struct
 pub struct Game {
-    pub total_columns: u16,
-    pub total_rows: u16,
-    pub topple: isize,
-    pub radius: f64,
-    pub brush_min: f64,
-    pub brush_max: f64,
-    pub brush_step: f64,
-    pub grid: Vec<Vec<Option<Cell>>>,
     pub exit: bool,
+    column_total: u16,
+    row_total: u16,
+    column_current: u16,
+    row_current: u16,
+    topple: isize,
+    brush_max: f64,
+    brush_min: f64,
+    brush_step: f64,
+    brush_current: f64,
+    grid: Vec<Vec<Option<Cell>>>,
 }
 
 impl Game {
     /// Initializes the game
-    pub fn new(total_columns: u32, total_rows: u32) -> Self {
+    pub fn new(columns: u32, rows: u32) -> Self {
+        let brush = 0.7;
         Self {
-            total_columns: total_columns as u16,
-            total_rows: total_rows as u16,
-            topple: 3,
-            radius: 1.0,
-            brush_min: 0.0,
-            brush_max: 60.0,
-            brush_step: 0.5,
-            grid: vec![vec![None; total_rows as usize]; total_columns as usize],
             exit: false,
+            column_total: columns as u16,
+            row_total: rows as u16,
+            column_current: (columns / 2) as u16,
+            row_current: (rows / 2) as u16,
+            topple: 3,
+            brush_max: 60.9,
+            brush_min: brush,
+            brush_step: brush,
+            brush_current: brush,
+            grid: vec![vec![None; rows as usize]; columns as usize],
         }
     }
 
@@ -52,12 +57,12 @@ impl Game {
 
         // Mouse scroll up increases the brush size
         if engine.is_mouse_scrolled_up() {
-            self.radius = (self.radius + self.brush_step).min(self.brush_max);
+            self.brush_current = (self.brush_current + self.brush_step).min(self.brush_max);
         }
 
         // Mouse scroll down reduces the brush size
         if engine.is_mouse_scrolled_down() {
-            self.radius = (self.radius - self.brush_step).max(self.brush_min);
+            self.brush_current = (self.brush_current - self.brush_step).max(self.brush_min);
         }
 
         // Applies the brush (Left click to draw, Right click to erase)
@@ -69,41 +74,39 @@ impl Game {
                 .get_mouse_held(button)
                 .or_else(|| engine.get_mouse_press(button))
             {
-                self.apply(column, row, button == console_engine::MouseButton::Left);
-            }
-        }
-
-        // Sets the size of the brush
-        for number in 0..=9 {
-            if engine.is_key_pressed(KeyCode::Char(char::from_digit(number, 10).unwrap())) {
-                self.radius = number as f64;
+                self.column_current = column as u16;
+                self.row_current = row as u16;
+                self.apply(button == console_engine::MouseButton::Left);
             }
         }
     }
 
     /// Resizes the grid
     pub fn resize(&mut self, new_columns: u16, new_rows: u16) {
-        let old_rows = self.total_rows as usize;
+        let old_rows = self.row_total as usize;
         self.grid
             .resize_with(new_columns as usize, || vec![None; old_rows]);
         for column in &mut self.grid {
             column.resize(new_rows as usize, None);
         }
 
-        self.total_columns = new_columns;
-        self.total_rows = new_rows;
+        self.column_total = new_columns;
+        self.row_total = new_rows;
     }
 
     /// Applies the brush to the grid
-    pub fn apply(&mut self, column: u32, row: u32, state: bool) {
-        let center_x = column as f64;
-        let center_y = row as f64;
+    pub fn apply(&mut self, state: bool) {
+        let center_x = self.column_current as f64;
+        let center_y = self.row_current as f64;
 
-        for x in (center_x as i32 - self.radius as i32)..=(center_x as i32 + self.radius as i32) {
-            for y in (center_y as i32 - self.radius as i32)..=(center_y as i32 + self.radius as i32)
+        for x in (center_x as i32 - self.brush_current as i32)
+            ..=(center_x as i32 + self.brush_current as i32)
+        {
+            for y in (center_y as i32 - self.brush_current as i32)
+                ..=(center_y as i32 + self.brush_current as i32)
             {
                 if ((x as f64 - center_x).powi(2) + (y as f64 - center_y).powi(2)).sqrt()
-                    <= self.radius
+                    <= self.brush_current
                     && x >= 0
                     && y >= 0
                     && (x as usize) < self.grid.len()
@@ -121,13 +124,14 @@ impl Game {
 
     /// Resets the grid
     pub fn reset(&mut self) {
-        self.grid = vec![vec![None; self.total_rows as usize]; self.total_columns as usize];
+        self.grid = vec![vec![None; self.row_total as usize]; self.column_total as usize];
+        self.brush_current = self.brush_min;
     }
 
     /// Drains the last row
     pub fn drain(&mut self) {
-        let last_row = self.total_rows as usize - 1;
-        for column in 0..self.total_columns as usize {
+        let last_row = self.row_total as usize - 1;
+        for column in 0..self.column_total as usize {
             self.grid[column][last_row] = None;
         }
     }
@@ -154,10 +158,19 @@ impl Game {
         }
 
         // Draws the UI
-        engine.print(
-            0,
-            0,
-            &format!("Brush: {:.1}", self.radius),
+        engine.print_fbg(1, 0, "Mouse L: Create", Color::Green, Color::Reset);
+        engine.print_fbg(1, 1, "Mouse R: Destroy", Color::Yellow, Color::Reset);
+        engine.print_fbg(1, 2, "Mouse Wheel: Brush Size", Color::Blue, Color::Reset);
+        engine.print_fbg(1, 3, "R: Reset", Color::Cyan, Color::Reset);
+        engine.print_fbg(1, 4, "D: Drain", Color::Magenta, Color::Reset);
+        engine.print_fbg(1, 5, "Q: Quit", Color::Red, Color::Reset);
+        engine.print_fbg(1, 6, "Brush Size:", Color::Grey, Color::Reset);
+        engine.print_fbg(
+            13,
+            6,
+            &format!("{:.1}", self.brush_current),
+            Color::White,
+            Color::Reset,
         );
     }
 
@@ -169,10 +182,10 @@ impl Game {
 
     /// Applies the gravity effect
     fn effect_gravity(&mut self) {
-        for column in 0..self.total_columns as usize {
-            for row in (0..self.total_rows as usize).rev() {
+        for column in 0..self.column_total as usize {
+            for row in (0..self.row_total as usize).rev() {
                 if self.grid[column][row].is_some()
-                    && row + 1 < self.total_rows as usize
+                    && row + 1 < self.row_total as usize
                     && self.grid[column][row + 1].is_none()
                 {
                     self.grid[column][row + 1] = self.grid[column][row];
@@ -184,8 +197,8 @@ impl Game {
 
     /// Applies the topple effect
     fn effect_topple(&mut self, range: isize) {
-        for column in 0..self.total_columns as usize {
-            for row in (0..self.total_rows as usize).rev() {
+        for column in 0..self.column_total as usize {
+            for row in (0..self.row_total as usize).rev() {
                 if self.grid[column][row].is_some() {
                     let direction = rand::random::<bool>();
                     if self.check_topple_direction(column, row, range, direction) {
@@ -207,10 +220,10 @@ impl Game {
     ) -> bool {
         let new_col = (column as isize + if direction { -1 } else { 1 }) as usize;
         let new_row = (row as isize + range) as usize;
-        if new_col < self.total_columns as usize
-            && new_row < self.total_rows as usize
+        if new_col < self.column_total as usize
+            && new_row < self.row_total as usize
             && self.grid[new_col][new_row].is_none()
-            && (row == self.total_rows as usize - 1 || self.grid[column][row + 1].is_some())
+            && (row == self.row_total as usize - 1 || self.grid[column][row + 1].is_some())
         {
             self.grid[new_col][new_row] = self.grid[column][row];
             self.grid[column][row] = None;
