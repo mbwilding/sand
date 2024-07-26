@@ -1,6 +1,5 @@
-use std::isize;
-
 use crate::cell::Cell;
+use crate::fps_counter::FpsCounter;
 use crate::window::draw_window;
 use console_engine::pixel;
 use console_engine::Color;
@@ -27,6 +26,7 @@ pub struct Game {
     grid: Vec<Vec<Option<Cell>>>,
     window_padding: u16,
     window_help: Window,
+    fps_counter: FpsCounter,
 }
 
 struct Window {
@@ -64,6 +64,7 @@ impl Game {
                 fg: Color::Green,
                 bg: Color::Black,
             },
+            fps_counter: FpsCounter::new(),
         }
     }
 
@@ -213,8 +214,17 @@ gravity: {},
 topple: {},
 topple_range: {},
 brush_size: {:.1}
-current_pos: ({}, {})",
-                    self.gravity, self.topple, self.topple_range, self.brush_current, self.current_column, self.current_row,
+current_pos: ({}, {})
+fps: {:.1}
+frame: {}",
+                    self.gravity,
+                    self.topple,
+                    self.topple_range,
+                    self.brush_current,
+                    self.current_column,
+                    self.current_row,
+                    self.fps_counter.fps,
+                    engine.frame_count
                 ),
                 self.window_help.fg,
                 self.window_help.bg,
@@ -225,20 +235,23 @@ current_pos: ({}, {})",
     }
 
     /// Updates the game
-    pub fn update(&mut self) {
+    pub fn tick(&mut self) {
         if self.topple {
             self.effect_topple(self.topple_range);
         }
         if self.gravity {
             self.effect_gravity();
         }
+
+        self.fps_counter.tick();
     }
 
     /// Applies the gravity effect
     fn effect_gravity(&mut self) {
         self.grid.par_iter_mut().for_each(|column| {
-            for row in (0..column.len()).rev() {
-                if column[row].is_some() && row + 1 < column.len() && column[row + 1].is_none() {
+            let column_total = column.len();
+            for row in (0..column_total).rev() {
+                if column[row].is_some() && row + 1 < column_total && column[row + 1].is_none() {
                     column[row + 1] = column[row];
                     column[row] = None;
                 }
@@ -249,7 +262,7 @@ current_pos: ({}, {})",
     /// Applies the topple effect
     fn effect_topple(&mut self, range: u8) {
         for column in 0..self.column_total as usize {
-            for row in (0..self.row_total as usize).rev() {
+            for row in 0..self.row_total as usize {
                 if self.grid[column][row].is_some() {
                     let direction = rand::random::<bool>();
                     if !self.check_topple_direction(column, row, range, direction) {

@@ -1,6 +1,7 @@
 use crate::game::Game;
 
 mod cell;
+mod fps_counter;
 mod game;
 mod input;
 mod window;
@@ -24,7 +25,7 @@ fn main() {
 
         engine.clear_screen();
         input::check(&mut game, &engine);
-        game.update();
+        game.tick();
         game.draw(&mut engine);
         engine.draw();
     }
