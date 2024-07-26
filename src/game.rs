@@ -71,28 +71,32 @@ impl Game {
     }
 
     /// Applies the brush to the grid
-    pub fn apply(&mut self, state: bool) {
-        let center_x = self.current_column as f64;
-        let center_y = self.current_row as f64;
+    pub fn apply(&mut self, additive: bool) {
+        let center_column = self.current_column as f64;
+        let center_row = self.current_row as f64;
 
-        for x in (center_x as i32 - self.brush_current as i32)
-            ..=(center_x as i32 + self.brush_current as i32)
+        for column in (center_column as i32 - self.brush_current as i32)
+            ..=(center_column as i32 + self.brush_current as i32)
         {
-            for y in (center_y as i32 - self.brush_current as i32)
-                ..=(center_y as i32 + self.brush_current as i32)
+            for row in (center_row as i32 - self.brush_current as i32)
+                ..=(center_row as i32 + self.brush_current as i32)
             {
-                if ((x as f64 - center_x).powi(2) + (y as f64 - center_y).powi(2)).sqrt()
+                if ((column as f64 - center_column).powi(2) + (row as f64 - center_row).powi(2))
+                    .sqrt()
                     <= self.brush_current
-                    && x >= 0
-                    && y >= 0
-                    && (x as usize) < self.grid.len()
-                    && (y as usize) < self.grid[0].len()
+                    && column >= 0
+                    && row >= 0
+                    && (column as usize) < self.grid.len()
+                    && (row as usize) < self.grid[0].len()
                 {
-                    self.grid[x as usize][y as usize] = if state {
-                        Some(Cell::new(true, true, true, true))
-                    } else {
-                        None
-                    };
+                    let cell = self.grid[column as usize][row as usize];
+
+                    if additive && cell.is_none() {
+                        let cell = Cell::new(true, true, true, true);
+                        self.grid[column as usize][row as usize] = Some(cell);
+                    } else if !additive && cell.is_some() {
+                        self.grid[column as usize][row as usize] = None;
+                    }
                 }
             }
         }
