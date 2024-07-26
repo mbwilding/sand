@@ -19,6 +19,16 @@ pub fn check(game: &mut Game, engine: &ConsoleEngine) {
         game.toggle_help_window();
     }
 
+    // Toggle gravity
+    if engine.is_key_pressed(KeyCode::Char('g')) {
+        game.toggle_gravity();
+    }
+
+    // Toggle topple
+    if engine.is_key_pressed(KeyCode::Char('t')) {
+        game.toggle_topple();
+    }
+
     // Exits the game
     if engine.is_key_pressed(KeyCode::Char('q')) {
         game.exit = true;
@@ -32,6 +42,16 @@ pub fn check(game: &mut Game, engine: &ConsoleEngine) {
     // Reduces the brush size
     if engine.is_key_pressed(KeyCode::Char('-')) {
         game.brush_decrease()
+    }
+
+    // Increases the topple range
+    if engine.is_key_pressed(KeyCode::Char(']')) {
+        game.topple_range_increase();
+    }
+
+    // Decreases the topple range
+    if engine.is_key_pressed(KeyCode::Char('[')) {
+        game.topple_range_decrease();
     }
 
     // Mouse scroll up increases the brush size
@@ -55,7 +75,7 @@ pub fn check(game: &mut Game, engine: &ConsoleEngine) {
         {
             game.current_column = column as u16;
             game.current_row = row as u16;
-            game.apply(button == console_engine::MouseButton::Left);
+            game.brush_apply(button == console_engine::MouseButton::Left);
         }
     }
 }

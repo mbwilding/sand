@@ -1,21 +1,29 @@
+use std::isize;
+
 use crate::cell::Cell;
 use crate::window::draw_window;
 use console_engine::pixel;
 use console_engine::Color;
 use console_engine::ConsoleEngine;
+use rayon::prelude::*;
 
 /// The game struct
 pub struct Game {
     pub exit: bool,
     pub current_column: u16,
     pub current_row: u16,
+    gravity: bool,
+    topple: bool,
+    topple_range: u8,
+    topple_min: u8,
+    topple_max: u8,
+    topple_range_default: u8,
     brush_max: f64,
     brush_min: f64,
     brush_step: f64,
     brush_current: f64,
     column_total: u16,
     row_total: u16,
-    topple: isize,
     grid: Vec<Vec<Option<Cell>>>,
     window_padding: u16,
     window_help: Window,
@@ -31,17 +39,24 @@ impl Game {
     /// Initializes the game
     pub fn new(columns: u32, rows: u32) -> Self {
         let brush = 0.7;
+        let topple_range = 3;
+
         Self {
             exit: false,
             current_column: (columns / 2) as u16,
             current_row: (rows / 2) as u16,
+            gravity: true,
+            topple: true,
+            topple_range,
+            topple_min: 1,
+            topple_max: 100,
+            topple_range_default: topple_range,
             brush_max: 60.9,
             brush_min: brush,
             brush_step: brush,
             brush_current: brush,
             column_total: columns as u16,
             row_total: rows as u16,
-            topple: 3,
             grid: vec![vec![None; rows as usize]; columns as usize],
             window_padding: 3,
             window_help: Window {
@@ -71,7 +86,7 @@ impl Game {
     }
 
     /// Applies the brush to the grid
-    pub fn apply(&mut self, additive: bool) {
+    pub fn brush_apply(&mut self, additive: bool) {
         let center_column = self.current_column as f64;
         let center_row = self.current_row as f64;
 
@@ -102,6 +117,16 @@ impl Game {
         }
     }
 
+    /// Gravity toggle
+    pub fn toggle_gravity(&mut self) {
+        self.gravity = !self.gravity;
+    }
+
+    /// Topple toggle
+    pub fn toggle_topple(&mut self) {
+        self.topple = !self.topple;
+    }
+
     /// Increases the brush size
     pub fn brush_increase(&mut self) {
         self.brush_current = (self.brush_current + self.brush_step).min(self.brush_max);
@@ -112,14 +137,31 @@ impl Game {
         self.brush_current = (self.brush_current - self.brush_step).max(self.brush_min);
     }
 
+    /// Increases the topple range
+    pub fn topple_range_increase(&mut self) {
+        self.topple_range = (self.topple_range + 1).min(self.topple_max);
+    }
+
+    /// Decreases the topple range
+    pub fn topple_range_decrease(&mut self) {
+        self.topple_range = (self.topple_range - 1).max(self.topple_min);
+    }
+
     /// Resets the grid
     pub fn reset(&mut self) {
         self.grid = vec![vec![None; self.row_total as usize]; self.column_total as usize];
         self.brush_current = self.brush_min;
+        self.topple_range = self.topple_range_default;
+        self.gravity = true;
+        self.topple = true;
     }
 
-    /// Drains the last row
+    /// Drains the last row, when gravity is enabled
     pub fn drain(&mut self) {
+        if !self.gravity {
+            return;
+        }
+
         let last_row = self.row_total as usize - 1;
         for column in 0..self.column_total as usize {
             self.grid[column][last_row] = None;
@@ -155,19 +197,24 @@ impl Game {
                 &format!(
                     r"bindings
 ━━━━━━━━
-add        ┃ mouse_l
-remove     ┃ mouse_r
-brush_size ┃ mouse_wheel, -/=
-reset      ┃ r
-drain      ┃ d
-help       ┃ h
-quit       ┃ q
+brush_apply  ┃ mouse_l/mouse_r
+brush_size   ┃ mouse_wheel, -/=
+topple_range ┃ [/]
+reset        ┃ r
+drain        ┃ d
+gravity      ┃ g
+topple       ┃ t
+help         ┃ h
+quit         ┃ q
 
 state
 ━━━━━
+gravity: {},
+topple: {},
+topple_range: {},
 brush_size: {:.1}
 current_pos: ({}, {})",
-                    self.brush_current, self.current_column, self.current_row,
+                    self.gravity, self.topple, self.topple_range, self.brush_current, self.current_column, self.current_row,
                 ),
                 self.window_help.fg,
                 self.window_help.bg,
@@ -179,27 +226,28 @@ current_pos: ({}, {})",
 
     /// Updates the game
     pub fn update(&mut self) {
-        self.effect_topple(self.topple);
-        self.effect_gravity();
+        if self.topple {
+            self.effect_topple(self.topple_range);
+        }
+        if self.gravity {
+            self.effect_gravity();
+        }
     }
 
     /// Applies the gravity effect
     fn effect_gravity(&mut self) {
-        for column in 0..self.column_total as usize {
-            for row in (0..self.row_total as usize).rev() {
-                if self.grid[column][row].is_some()
-                    && row + 1 < self.row_total as usize
-                    && self.grid[column][row + 1].is_none()
-                {
-                    self.grid[column][row + 1] = self.grid[column][row];
-                    self.grid[column][row] = None;
+        self.grid.par_iter_mut().for_each(|column| {
+            for row in (0..column.len()).rev() {
+                if column[row].is_some() && row + 1 < column.len() && column[row + 1].is_none() {
+                    column[row + 1] = column[row];
+                    column[row] = None;
                 }
             }
-        }
+        });
     }
 
     /// Applies the topple effect
-    fn effect_topple(&mut self, range: isize) {
+    fn effect_topple(&mut self, range: u8) {
         for column in 0..self.column_total as usize {
             for row in (0..self.row_total as usize).rev() {
                 if self.grid[column][row].is_some() {
@@ -217,11 +265,12 @@ current_pos: ({}, {})",
         &mut self,
         column: usize,
         row: usize,
-        range: isize,
+        range: u8,
         direction: bool,
     ) -> bool {
-        let new_col = (column as isize + if direction { -1 } else { 1 }) as usize;
-        let row_check = (row as isize + range) as usize;
+        let direction = if direction { -1 } else { 1 };
+        let new_col = (column as isize + direction) as usize;
+        let row_check = row + range as usize;
         if new_col < self.column_total as usize
             && row_check < self.row_total as usize
             && self.grid[new_col][row_check].is_none()

@@ -58,9 +58,3 @@ impl Cell {
         }
     }
 }
-
-impl PartialEq<Cell> for Cell {
-    fn eq(&self, other: &Cell) -> bool {
-        self.glyph == other.glyph && self.color.rgb() == other.color.rgb()
-    }
-}
